@@ -15,6 +15,7 @@ import argparse
 import atexit
 import getpass
 
+
 STATE_OK = 0
 STATE_WARNING = 1
 STATE_CRITICAL = 2
