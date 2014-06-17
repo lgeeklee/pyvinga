@@ -62,9 +62,13 @@ def vmStatus(vmObj):
 
 def vmCore(vmObj):
     vmconfig = vmObj.summary.config
-    print "{}, {}, {} vCPU(s), {:.0f} GB Memory".format(vmconfig.annotation,
+    if (float(vmconfig.memorySizeMB) / 1024).is_integer():
+        vm_memory = str(vmconfig.memorySizeMB / 1024) + ' GB'
+    else:
+        vm_memory = str(vmconfig.memorySizeMB) + ' MB'
+    print "{}, {}, {} vCPU(s), {} Memory".format(vmconfig.annotation,
                                                         vmconfig.guestFullName, vmObj.summary.config.numCpu,
-                                                        (vmconfig.memorySizeMB / 1024))
+                                                        (vm_memory))
     exit(STATE_OK)
 
 
