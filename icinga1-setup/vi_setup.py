@@ -148,13 +148,19 @@ def create_vcenter_config(entity, vm_props, dc_list, dc_sahost_list, dc_cl_list,
         if dc_cl_list:
             for dc_cl in dc_cl_list:
                 if dc == dc_cl['dcname']:
-                    hostgroup_name = str(dc).lower() + '-' + str(dc_cl['clustername']).lower() + '-hosts '
+                    hostgroup_name = str(dc).lower() + '-clusters '
                     hostgroup_type = 'Datacenter Clusters'
                     create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type)
+                    host_type = 'cluster'
+                    create_vc_host(dc, entity, str(dc_cl['clustername']).lower(), hostgroup_name, host_type, dc_cl['clustername'])
+
+                    hostgroup_name = str(dc).lower() + '-' + str(dc_cl['clustername']).lower() + '-hosts '
+                    hostgroup_type = 'Cluster Hosts'
+                    create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, dc_cl['clustername'])
                     for cl_host in cl_host_list:
                         if dc_cl['clustername'] == cl_host['clustername']:
                             host_type = 'clhost'
-                            create_vc_host(dc, entity, cl_host['hostname'], hostgroup_name, host_type, str(dc_cl['clustername']).lower())
+                            create_vc_host(dc, entity, cl_host['hostname'], hostgroup_name, host_type, dc_cl['clustername'])
                     pass
         #Create Stand Alone Host hosts
         for sahost in dc_sahost_list:
@@ -255,7 +261,7 @@ def create_esxi_ds(hostgroup_type, hostgroup_name, entity, host_name):
     f.close()
 
 
-def create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type):
+def create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, cl_name=''):
     """
 
     :param dc:
@@ -263,37 +269,41 @@ def create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type):
     :param hostgroup_name:
     :param hostgroup_type:
     """
-    vi_entity_file = 'C://Temp//vm_' + dc + '_config.cfg'
+    vi_entity_file = 'C://Temp//vc_' + dc + '_config.cfg'
 
     f = open(vi_entity_file, 'a')
-    f.write('#' + hostgroup_type + ' in hostgroup for this entity\n')
-    f.write('#@' + entity + hostgroup_type + '\n')
+    f.write('#' + hostgroup_type + ' in hostgroup for ' + entity + '\n')
     f.write('define hostgroup {\n')
     f.write('\thostgroup_name\t\t' + hostgroup_name + '\n')
-    f.write('\talias\t\t\t' + dc + ' ' + hostgroup_type + '\n')
+    f.write('\talias\t\t\t' + dc + ' ' + cl_name + ' ' + hostgroup_type + '\n')
     f.write('\t}\n\n')
     f.close()
 
 
 def create_vc_host(dc, entity, host_name, hostgroup_name, host_type, cl_name=''):
-    vi_entity_file = 'C://Temp//vm_' + dc + '_hosts.cfg'
+    vi_entity_file = 'C://Temp//vc_' + dc + '_hosts.cfg'
     norm_host = host_name.split('.')[0]
 
     f = open(vi_entity_file, 'a')
-    f.write('#vCenter ' + entity + '\n')
     f.write('define host {\n')
     f.write('\tuse\t\t\tgeneric-host\n')
-    f.write('\thost_name\t\t' + norm_host + '\n')
+    if host_type == 'cluster':
+        f.write('\thost_name\t\t' + cl_name + '\n')
+    else:
+        f.write('\thost_name\t\t' + norm_host + '\n')
     f.write('\talias\t\t\t' + norm_host + ' ' + host_type + '\n')
-    f.write('\taddress\t\t\t' + host_name + '\n')
-    #if host_type == 'clhost':
-    #    f.write('\tparents\t\t\t' + cl_name + '\n')
-    if host_type != 'cluster':
-        f.write('\thostgroups\t\t\t' + hostgroup_name + '\n')
+    if host_type != ('cluster' or 'datastore'):
+        f.write('\taddress\t\t\t' + host_name + '\n')
+    if host_type == 'clhost':
+        f.write('\tparents\t\t\t' + cl_name + '\n')
+    f.write('\thostgroups\t\t\t' + hostgroup_name + '\n')
     if host_type == 'datastore':
         f.write('\tcheck_command\t\tcheck_pyvi!' + entity + '!datastore!status\n')
+    elif host_type == 'cluster':
+        f.write('\tcheck_command\t\tcheck_pyvi!' + entity + '!cluster!status\n')
     f.write('\t}\n\n')
     f.close()
+
 
 
 def get_hierarchy(content):
@@ -385,10 +395,10 @@ def main():
         vm_props, dc_list, dc_sahost_list, dc_cl_list, cl_host_list = get_hierarchy(content)
         ds_table = get_datastore_hierarchy(content)
 
-        create_vcenter_config(args.entity, vm_props, dc_list, dc_sahost_list, dc_cl_list, cl_host_list, ds_table)
-
         if content.about.name == 'VMware vCenter Server':
             print("vCenter detected")
+            #create_commands()
+            create_vcenter_config(args.entity, vm_props, dc_list, dc_sahost_list, dc_cl_list, cl_host_list, ds_table)
             pass
         elif content.about.name == 'VMware ESXi':
             create_commands()

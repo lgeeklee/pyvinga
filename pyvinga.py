@@ -83,6 +83,11 @@ def hostCore(hostObj):
     exit(STATE_OK)
 
 
+def clusterStatus(clusterObj):
+    finalOutput = clusterObj.overallStatus
+    PrintOutputString(finalOutput, 'Cluster Status', 'yellow', 'red', 'grey')
+
+
 def CpuReady(vmObj, content, perf_dict):
     counter_key = StatCheck(perf_dict, 'cpu.ready.summation')
     statData = BuildQuery(content, counter_key, "", vmObj)
@@ -228,9 +233,9 @@ def write_perf_dictionary(content, file_perf_dic):
 
 def create_perf_dictionary(content):
     if content.about.name == 'VMware vCenter Server':
-        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//vcenter_perfdic.txt')
     elif content.about.name == 'VMware ESXi':
-        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//host_perfdic.txt')
     return perf_dict
 
 
@@ -314,6 +319,16 @@ def main():
                         datastoreStatus(datastoreObj)
                     elif args.counter == 'space':
                         datastoreSpace(datastoreObj)
+                    else:
+                        print "No supported counter found"
+
+        elif args.type == 'cluster':
+            clProps = GetProperties(content, [vim.ClusterComputeResource], ['name'], vim.ClusterComputeResource)
+            for cluster in clProps:
+                if cluster['name'] in entitynames: #TODO Rename entitynames
+                    clusterObj = cluster['moref']
+                    if args.counter == 'status':
+                        clusterStatus(clusterObj)
                     else:
                         print "No supported counter found"
 
