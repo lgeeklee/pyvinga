@@ -160,12 +160,25 @@ def StatCheck(perf_dict, counter_name):
 
 def GetProperties(content, viewType, props, specType):
     # Build a view and get basic properties for all Virtual Machines
+    """
+    Obtains a list of specific properties for a particular Managed Object Reference data object.
+
+    :param content: ServiceInstance Managed Object
+    :param viewType: Type of Managed Object Reference that should populate the View
+    :param props: A list of properties that should be retrieved for the entity
+    :param specType: Type of Managed Object Reference that should be used for the Property Specification
+    :return:
+    """
+    # Get the View based on the viewType
     objView = content.viewManager.CreateContainerView(content.rootFolder, viewType, True)
+    # Build the Filter Specification
     tSpec = vim.PropertyCollector.TraversalSpec(name='tSpecName', path='view', skip=False, type=vim.view.ContainerView)
     pSpec = vim.PropertyCollector.PropertySpec(all=False, pathSet=props, type=specType)
     oSpec = vim.PropertyCollector.ObjectSpec(obj=objView, selectSet=[tSpec], skip=False)
     pfSpec = vim.PropertyCollector.FilterSpec(objectSet=[oSpec], propSet=[pSpec], reportMissingObjectsInResults=False)
     retOptions = vim.PropertyCollector.RetrieveOptions()
+    # Retrieve the properties and look for a token coming back with each RetrievePropertiesEx call
+    # If the token is present it indicates there are more items to be returned.
     totalProps = []
     retProps = content.propertyCollector.RetrievePropertiesEx(specSet=[pfSpec], options=retOptions)
     totalProps += retProps.objects
@@ -173,7 +186,7 @@ def GetProperties(content, viewType, props, specType):
         retProps = content.propertyCollector.ContinueRetrievePropertiesEx(token=retProps.token)
         totalProps += retProps.objects
     objView.Destroy()
-    # Turn the output in retProps into a usable dictionary of values
+    # Turn the output in totalProps into a usable dictionary of values
     gpOutput = []
     for eachProp in totalProps:
         propDic = {}
