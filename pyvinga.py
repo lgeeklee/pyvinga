@@ -45,8 +45,8 @@ def GetArgs():
 def BuildQuery(content, counterId, instance, vm):
     perfManager = content.perfManager
     metricId = vim.PerformanceManager.MetricId(counterId=counterId, instance=instance)
-    startTime = datetime.now() - timedelta(seconds=40)
-    endTime = datetime.now() - timedelta(seconds=20)
+    startTime = datetime.now() - timedelta(seconds=60)
+    endTime = datetime.now() - timedelta(seconds=40)
     query = vim.PerformanceManager.QuerySpec(intervalId=20, entity=vm, metricId=[metricId], startTime=startTime,
                                              endTime=endTime)
     perfResults = perfManager.QueryPerf(querySpec=[query])
@@ -233,9 +233,9 @@ def write_perf_dictionary(content, file_perf_dic):
 
 def create_perf_dictionary(content):
     if content.about.name == 'VMware vCenter Server':
-        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//vcenter_perfdic.txt')
     elif content.about.name == 'VMware ESXi':
-        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//host_perfdic.txt')
     return perf_dict
 
 
