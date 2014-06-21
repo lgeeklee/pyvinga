@@ -1,6 +1,6 @@
 pyvinga
 =======
 
-Python pyVmomi plugin for Icinga
+Python pyVmomi plugin for Icinga monitoring.
 
-Working on a v0.1 to get a base.
+See Wiki for further details.
