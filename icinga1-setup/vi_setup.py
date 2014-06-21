@@ -1,8 +1,8 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 
 """
-Python program will import VMs and Datastores from an ESXi host and create an Icinga
-hierarchy.
+Python program will import VMs and Datastores from an ESXi host or vCenter instance
+and create an Icinga hierarchy.
 """
 
 from __future__ import print_function
