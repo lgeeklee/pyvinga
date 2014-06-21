@@ -91,12 +91,12 @@ def create_esxi_config(entity, vmProps, dsProps):
     create_esxi_host(entity)
 
     hostgroup_name = create_esxi_hostgroup(hostgroup_type, entity, norm_entity, h_description)
-    create_service(hostgroup_type, entity, norm_entity, 'generic-service', 'CPU Ready', 'vm', 'cpu.ready')
-    create_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Core Information', 'vm', 'core')
-    create_service(hostgroup_type, entity, norm_entity, 'generic-service', 'CPU Usage', 'vm', 'cpu.usage')
-    create_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Memory Active', 'vm', 'mem.active')
-    create_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Memory Shared', 'vm', 'mem.shared')
-    create_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Memory Balloon', 'vm', 'mem.balloon')
+    create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'CPU Ready', 'vm', 'cpu.ready')
+    create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Core Information', 'vm', 'core')
+    create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'CPU Usage', 'vm', 'cpu.usage')
+    create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Memory Active', 'vm', 'mem.active')
+    create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Memory Shared', 'vm', 'mem.shared')
+    create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Memory Balloon', 'vm', 'mem.balloon')
     for vm in vmProps:
         create_esx_vm(hostgroup_type, hostgroup_name, entity, vm['name'])
 
@@ -104,69 +104,14 @@ def create_esxi_config(entity, vmProps, dsProps):
     hostgroup_type = 'datastores'
 
     hostgroup_name = create_esxi_hostgroup(hostgroup_type, entity, norm_entity, h_description)
-    create_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Datastore Space', 'datastore', 'space')
+    create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Datastore Space', 'datastore', 'space')
     for ds in dsProps:
         create_esxi_ds(hostgroup_type, hostgroup_name, entity, ds['name'])
 
     h_description = 'Hosts'
     hostgroup_type = 'hosts'
-    create_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Core Information', 'host', 'core',
+    create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Core Information', 'host', 'core',
                    group=False)
-
-
-def create_vcenter_config(entity, vm_props, dc_list, dc_sahost_list, dc_cl_list, cl_host_list, ds_table):
-    """
-
-    :param entity:
-    :param vm_props:
-    :param dc_list:
-    :param dc_sahost_list:
-    :param dc_cl_list:
-    :param cl_host_list:
-    :param ds_table:
-    """
-    for dc in dc_list:
-        #Create Datacenter - Stand Alone Host host groups
-        if dc_sahost_list:
-            hostgroup_name = str(dc).lower() + '-hosts'
-            hostgroup_type = 'Datacenter Hosts'
-            create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type)
-            for sahost in dc_sahost_list:
-                if dc == sahost['dcname']:
-                    host_type = 'sahost'
-                    create_vc_host(dc, entity, sahost['hostname'], hostgroup_name, host_type)
-        #Create Datastore hosts
-        if ds_table:
-            hostgroup_name = str(dc).lower() + '-datastores'
-            hostgroup_type = 'Datacenter Datastores'
-            create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type)
-            for ds in ds_table:
-                if dc == ds['dcname']:
-                    host_type = 'datastore'
-                    create_vc_host(dc, entity, ds['dsname'], hostgroup_name, host_type)
-        #Create DataCenter - Cluster host groups
-        if dc_cl_list:
-            for dc_cl in dc_cl_list:
-                if dc == dc_cl['dcname']:
-                    hostgroup_name = str(dc).lower() + '-clusters '
-                    hostgroup_type = 'Datacenter Clusters'
-                    create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type)
-                    host_type = 'cluster'
-                    create_vc_host(dc, entity, str(dc_cl['clustername']).lower(), hostgroup_name, host_type, dc_cl['clustername'])
-
-                    hostgroup_name = str(dc).lower() + '-' + str(dc_cl['clustername']).lower() + '-hosts '
-                    hostgroup_type = 'Cluster Hosts'
-                    create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, dc_cl['clustername'])
-                    for cl_host in cl_host_list:
-                        if dc_cl['clustername'] == cl_host['clustername']:
-                            host_type = 'clhost'
-                            create_vc_host(dc, entity, cl_host['hostname'], hostgroup_name, host_type, dc_cl['clustername'])
-                    pass
-        #Create Stand Alone Host hosts
-        for sahost in dc_sahost_list:
-            if dc in sahost:
-                #create_host_host(dc['hostname'])
-                pass
 
 
 def create_esxi_hostgroup(hostgroup_type, entity, norm_entity, h_description):
@@ -193,14 +138,14 @@ def create_esxi_hostgroup(hostgroup_type, entity, norm_entity, h_description):
     return hostgroup_name
 
 
-def create_service(hostgroup_type, entity, norm_entity, s_use, s_description, counter_type, counter, group=True):
+def create_esxi_service(hostgroup_type, entity, norm_entity, service_template, s_description, counter_type, counter, group=True):
     vi_entity_file = '/etc/icinga/objects/vi_' + norm_entity + '_config.cfg'
     hostgroup_name = norm_entity + '-' + hostgroup_type
 
     f = open(vi_entity_file, 'a')
     f.write('#Service ' + s_description + ' for Virtual Machines\n')
     f.write('define service {\n')
-    f.write('\tuse\t\t\tgeneric-service\n')
+    f.write('\tuse\t\t\t + service_template + \n')
     if group:
         f.write('\thostgroup_name\t\t' + hostgroup_name + '\n')
     else:
@@ -261,6 +206,92 @@ def create_esxi_ds(hostgroup_type, hostgroup_name, entity, host_name):
     f.close()
 
 
+def create_vcenter_config(entity, vm_props, dc_list, dc_sahost_list, dc_cl_list, cl_host_list, ds_table):
+    """
+
+    :param entity:
+    :param vm_props:
+    :param dc_list:
+    :param dc_sahost_list:
+    :param dc_cl_list:
+    :param cl_host_list:
+    :param ds_table:
+    """
+    host_hglist = []
+    ds_hglist = []
+    cl_hglist = []
+    vm_hglist = []
+    for dc in dc_list:
+        #Create Datacenter - Stand Alone Host host groups
+        if dc_sahost_list:
+            hostgroup_name = str(dc).lower() + '-hosts'
+            hostgroup_type = 'Datacenter Hosts'
+            create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type)
+            host_hglist.append(hostgroup_name)
+            for sahost in dc_sahost_list:
+                if dc == sahost['dcname']:
+                    host_type = 'sahost'
+                    create_vc_host(dc, entity, sahost['hostname'], hostgroup_name, host_type)
+                    hostgroup_name = str(dc).lower() + '-' + str(sahost['hostname']).split('.')[0] + '-vms'
+                    hostgroup_type = 'Host VMs'
+                    create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, str(sahost['hostname']).split('.')[0])
+                    vm_hglist.append(hostgroup_name)
+        #Create Datastore hosts
+        if ds_table:
+            hostgroup_name = str(dc).lower() + '-datastores'
+            hostgroup_type = 'Datacenter Datastores'
+            create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type)
+            ds_hglist.append(hostgroup_name)
+            for ds in ds_table:
+                if dc == ds['dcname']:
+                    host_type = 'datastore'
+                    create_vc_host(dc, entity, ds['dsname'], hostgroup_name, host_type)
+        #Create DataCenter - Cluster host groups
+        if dc_cl_list:
+            for dc_cl in dc_cl_list:
+                if dc == dc_cl['dcname']:
+                    hostgroup_name = str(dc).lower() + '-clusters '
+                    hostgroup_type = 'Datacenter Clusters'
+                    create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type)
+                    host_type = 'cluster'
+                    create_vc_host(dc, entity, str(dc_cl['clustername']).lower(), hostgroup_name, host_type, dc_cl['clustername'])
+                    cl_hglist.append(hostgroup_name)
+
+                    hostgroup_name = str(dc).lower() + '-' + str(dc_cl['clustername']).lower() + '-vms '
+                    hostgroup_type = 'Cluster VMs'
+                    create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, dc_cl['clustername'])
+                    vm_hglist.append(hostgroup_name)
+
+                    hostgroup_name = str(dc).lower() + '-' + str(dc_cl['clustername']).lower() + '-hosts '
+                    hostgroup_type = 'Cluster Hosts'
+                    create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, dc_cl['clustername'])
+                    host_hglist.append(hostgroup_name)
+                    for cl_host in cl_host_list:
+                        if dc_cl['clustername'] == cl_host['clustername']:
+                            host_type = 'clhost'
+                            create_vc_host(dc, entity, cl_host['hostname'], hostgroup_name, host_type, dc_cl['clustername'])
+
+    for vm in vm_props:
+        host_type = 'vm'
+        if vm['clustername'] == False:
+            vm_parent = str(vm['hostname']).split('.')[0]
+        else:
+            vm_parent = vm['clustername']
+        create_vc_host(vm['dcname'], entity, vm['name'], vm['hostgroup_name'], host_type, vm_parent)
+
+    #Create Virtual Machine services
+    create_vc_service(entity, ','.join(vm_hglist), 'generic-service', 'CPU Ready', 'vm', 'cpu.ready')
+    create_vc_service(entity, ','.join(vm_hglist), 'generic-service', 'Core Information', 'vm', 'core')
+    create_vc_service(entity, ','.join(vm_hglist), 'generic-service', 'CPU Usage', 'vm', 'cpu.usage')
+    create_vc_service(entity, ','.join(vm_hglist), 'generic-service', 'Memory Active', 'vm', 'mem.active')
+    create_vc_service(entity, ','.join(vm_hglist), 'generic-service', 'Memory Shared', 'vm', 'mem.shared')
+    create_vc_service(entity, ','.join(vm_hglist), 'generic-service', 'Memory Balloon', 'vm', 'mem.balloon')
+    #Create Datastore services
+    create_vc_service(entity, ','.join(ds_hglist), 'generic-service', 'Datastore Space', 'datastore', 'space')
+    #Create Host services
+    create_vc_service(entity, ','.join(host_hglist), 'generic-service', 'Core Information', 'host', 'core')
+
+
 def create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, cl_name=''):
     """
 
@@ -269,7 +300,7 @@ def create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, cl_name=''):
     :param hostgroup_name:
     :param hostgroup_type:
     """
-    vi_entity_file = 'C://Temp//vc_' + dc + '_config.cfg'
+    vi_entity_file = '/etc/icinga/objects/vc_' + dc + '_config.cfg'
 
     f = open(vi_entity_file, 'a')
     f.write('#' + hostgroup_type + ' in hostgroup for ' + entity + '\n')
@@ -281,7 +312,7 @@ def create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, cl_name=''):
 
 
 def create_vc_host(dc, entity, host_name, hostgroup_name, host_type, cl_name=''):
-    vi_entity_file = 'C://Temp//vc_' + dc + '_hosts.cfg'
+    vi_entity_file = '/etc/icinga/objects/vc_' + dc + '_hosts.cfg'
     norm_host = host_name.split('.')[0]
 
     f = open(vi_entity_file, 'a')
@@ -292,18 +323,33 @@ def create_vc_host(dc, entity, host_name, hostgroup_name, host_type, cl_name='')
     else:
         f.write('\thost_name\t\t' + norm_host + '\n')
     f.write('\talias\t\t\t' + norm_host + ' ' + host_type + '\n')
-    if host_type != ('cluster' or 'datastore'):
+    if host_type != 'cluster' or host_type != 'datastore':
         f.write('\taddress\t\t\t' + host_name + '\n')
-    if host_type == 'clhost':
+    if host_type == 'clhost' or host_type == 'vm':
         f.write('\tparents\t\t\t' + cl_name + '\n')
     f.write('\thostgroups\t\t\t' + hostgroup_name + '\n')
     if host_type == 'datastore':
         f.write('\tcheck_command\t\tcheck_pyvi!' + entity + '!datastore!status\n')
     elif host_type == 'cluster':
         f.write('\tcheck_command\t\tcheck_pyvi!' + entity + '!cluster!status\n')
+    elif host_type == 'vm':
+            f.write('\tcheck_command\t\tcheck_pyvi!' + entity + '!vm!status\n')
     f.write('\t}\n\n')
     f.close()
 
+
+def create_vc_service(entity, hostgroup_name, service_template, s_description, counter_type, counter):
+    vi_services_file = '/etc/icinga/objects/vc_services_config.cfg'
+
+    f = open(vi_services_file, 'a')
+    f.write('#Service ' + s_description + ' for ' + counter_type + '\n')
+    f.write('define service {\n')
+    f.write('\tuse\t\t\t' + service_template + '\n')
+    f.write('\thostgroup_name\t\t' + hostgroup_name + '\n')
+    f.write('\tservice_description\t' + s_description + '\n')
+    f.write('\tcheck_command\t\tcheck_pyvi!' + entity + '!' + counter_type + '!' + counter + '\n')
+    f.write('\t}\n\n')
+    f.close()
 
 
 def get_hierarchy(content):
@@ -346,14 +392,19 @@ def get_hierarchy(content):
                 vm['hostname'] = host['name']
                 vm['clustername'] = host['clustername']
                 vm['dcname'] = host['dcname']
+                if host['clustername'] == False:
+                    vm['hostgroup_name'] = str(host['dcname']).lower() + '-' + str(host['name']).split('.')[0].lower() + '-vms'
+                else:
+                    vm['hostgroup_name'] = str(host['dcname']).lower() + '-' + str(host['clustername']).lower() + '-vms'
         del vm['runtime.host']
-        del vm['moref']
 
     #Get unique DC list
     dc_list = []
     for vm in vm_props:
         dc_list.append(vm['dcname'])
     dc_list = set(dc_list)
+
+
 
     return (vm_props, dc_list, dc_sahost_list, dc_cl_list, cl_host_list)
 
@@ -396,11 +447,12 @@ def main():
         ds_table = get_datastore_hierarchy(content)
 
         if content.about.name == 'VMware vCenter Server':
-            print("vCenter detected")
-            #create_commands()
+            print("vCenter Instance detected")
+            create_commands()
             create_vcenter_config(args.entity, vm_props, dc_list, dc_sahost_list, dc_cl_list, cl_host_list, ds_table)
             pass
         elif content.about.name == 'VMware ESXi':
+            print("ESXi Host detected")
             create_commands()
             create_esxi_config(args.entity, vm_props, ds_table)
 
