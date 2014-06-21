@@ -242,7 +242,7 @@ def create_perf_dictionary(content):
 def main():
     args = GetArgs()
     try:
-        entitynames = args.entity
+        entity = args.entity
         si = None
         if args.password:
             password = args.password
@@ -268,7 +268,7 @@ def main():
             #Find VM supplied as arg and use Managed Object Reference (moref) for the PrintVmInfo
             vmProps = GetProperties(content, [vim.VirtualMachine], ['name', 'runtime.powerState'], vim.VirtualMachine)
             for vm in vmProps:
-                if (vm['name'] in entitynames) and (vm['runtime.powerState'] == "poweredOn"):
+                if (vm['name'] == entity) and (vm['runtime.powerState'] == "poweredOn"):
                     vmObj = vm['moref']
                     if args.counter == 'core':
                         vmCore(vmObj)
@@ -290,7 +290,7 @@ def main():
                         DataStoreIOWrite(vmObj, content, perf_dict)
                     else:
                         print "No supported counter found"
-                elif (vm['name'] in entitynames) and ((vm['runtime.powerState'] == "poweredOff") or (vm['runtime.powerState'] == "suspended")):
+                elif (vm['name'] == entity) and ((vm['runtime.powerState'] == "poweredOff") or (vm['runtime.powerState'] == "suspended")):
                     vmObj = vm['moref']
                     if args.counter == 'core':
                         vmCore(vmObj)
@@ -303,7 +303,7 @@ def main():
         elif args.type == 'host':
             dsProps = GetProperties(content, [vim.HostSystem], ['name'], vim.HostSystem)
             for host in dsProps:
-                if host['name'] in entitynames:
+                if host['name'] == entity:
                     hostObj = host['moref']
                     if args.counter == 'core':
                         hostCore(hostObj)
@@ -313,7 +313,7 @@ def main():
         elif args.type == 'datastore':
             dsProps = GetProperties(content, [vim.Datastore], ['name'], vim.Datastore)
             for datastore in dsProps:
-                if datastore['name'] in entitynames:
+                if datastore['name'] == entity:
                     datastoreObj = datastore['moref']
                     if args.counter == 'status':
                         datastoreStatus(datastoreObj)
@@ -325,7 +325,7 @@ def main():
         elif args.type == 'cluster':
             clProps = GetProperties(content, [vim.ClusterComputeResource], ['name'], vim.ClusterComputeResource)
             for cluster in clProps:
-                if cluster['name'] in entitynames: #TODO Rename entitynames
+                if cluster['name'] == entity:
                     clusterObj = cluster['moref']
                     if args.counter == 'status':
                         clusterStatus(clusterObj)
