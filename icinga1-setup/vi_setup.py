@@ -14,7 +14,9 @@ from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vmodl, vim
 
 
+# The path and name of the file where you want the custom command(s) to be stored
 vi_var_file = '/etc/icinga/objects/vi_commands.cfg'
+# Domain name of your ESXi hosts - only used when querying individual ESXi hosts
 domain_name = '.homelab.local'
 
 
@@ -35,19 +37,24 @@ def GetArgs():
 def GetProperties(content, viewType, props, specType):
     # Build a view and get basic properties for all Virtual Machines
     """
+    Obtains a list of specific properties for a particular Managed Object Reference data object.
 
-    :param content:
-    :param viewType:
-    :param props:
-    :param specType:
+    :param content: ServiceInstance Managed Object
+    :param viewType: Type of Managed Object Reference that should populate the View
+    :param props: A list of properties that should be retrieved for the entity
+    :param specType: Type of Managed Object Reference that should be used for the Property Specification
     :return:
     """
+    # Get the View based on the viewType
     objView = content.viewManager.CreateContainerView(content.rootFolder, viewType, True)
+    # Build the Filter Specification
     tSpec = vim.PropertyCollector.TraversalSpec(name='tSpecName', path='view', skip=False, type=vim.view.ContainerView)
     pSpec = vim.PropertyCollector.PropertySpec(all=False, pathSet=props, type=specType)
     oSpec = vim.PropertyCollector.ObjectSpec(obj=objView, selectSet=[tSpec], skip=False)
     pfSpec = vim.PropertyCollector.FilterSpec(objectSet=[oSpec], propSet=[pSpec], reportMissingObjectsInResults=False)
     retOptions = vim.PropertyCollector.RetrieveOptions()
+    # Retrieve the properties and look for a token coming back with each RetrievePropertiesEx call
+    # If the token is present it indicates there are more items to be returned.
     totalProps = []
     retProps = content.propertyCollector.RetrievePropertiesEx(specSet=[pfSpec], options=retOptions)
     totalProps += retProps.objects
@@ -55,7 +62,7 @@ def GetProperties(content, viewType, props, specType):
         retProps = content.propertyCollector.ContinueRetrievePropertiesEx(token=retProps.token)
         totalProps += retProps.objects
     objView.Destroy()
-    # Turn the output in retProps into a usable dictionary of values
+    # Turn the output in totalProps into a usable dictionary of values
     gpOutput = []
     for eachProp in totalProps:
         propDic = {}
@@ -67,6 +74,12 @@ def GetProperties(content, viewType, props, specType):
 
 
 def create_commands():
+    """
+    Create the file that will store the command definition to for check_pyvi.
+
+    Ensure $USER3$ and $USER4$ are configured.  If multiple sets of credentials are stored then
+    multiple commands would need to be entered into this file.
+    """
     f = open(vi_var_file, 'w')
     f.write('#\'check_pyvi\' command definition\n')
     f.write('define command {\n')
@@ -79,10 +92,11 @@ def create_commands():
 
 def create_esxi_config(entity, vmProps, dsProps):
     """
+    Creathe the configuration for an ESXi host
 
-    :param entity:
-    :param vmProps:
-    :param dsProps:
+    :param entity: The ESXi host passed on the command line
+    :param vmProps: The Virtual Machine hierarchy details for this ESXi host
+    :param dsProps: The Datastore hierarchy details for this ESXi host
     """
     norm_entity = entity.split('.')[0]
     h_description = 'Virtual Machines'
@@ -208,70 +222,81 @@ def create_esxi_ds(hostgroup_type, hostgroup_name, entity, host_name):
 
 def create_vcenter_config(entity, vm_props, dc_list, dc_sahost_list, dc_cl_list, cl_host_list, ds_table):
     """
+    Create the configuration for a vCenter instance
 
-    :param entity:
-    :param vm_props:
-    :param dc_list:
-    :param dc_sahost_list:
-    :param dc_cl_list:
-    :param cl_host_list:
-    :param ds_table:
+    :param entity: The vCenter instance passed on the command line
+    :param vm_props: The Virtual Machine hierarchy details for this ESXi host
+    :param dc_list: The unique list of vCenter Datacenters
+    :param dc_sahost_list: A list of each vCenter Datacenter and its stand alone ESXi hosts
+    :param dc_cl_list: A list of each vCenter Datacenter and its Clusters
+    :param cl_host_list: A list of each vCenter Cluster and its ESXi hosts
+    :param ds_table: The Datastore hierarchy details for this ESXi host
     """
+    # Create variables to hold the unique list of hostgroups as they're created
     host_hglist = []
     ds_hglist = []
     cl_hglist = []
     vm_hglist = []
+
+    # Check through each vCenter Datacenter and create the relevant configuration
     for dc in dc_list:
-        #Create Datacenter - Stand Alone Host host groups
         if dc_sahost_list:
+            # Create Datacenter - stand alone ESXi host groups
             hostgroup_name = str(dc).lower() + '-hosts'
             hostgroup_type = 'Datacenter Hosts'
             create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type)
             host_hglist.append(hostgroup_name)
             for sahost in dc_sahost_list:
                 if dc == sahost['dcname']:
+                    # Create stand alone alone ESXi host objects
                     host_type = 'sahost'
                     create_vc_host(dc, entity, sahost['hostname'], hostgroup_name, host_type)
+                    # Create stand alone ESXi host = Virtual Machine host groups
                     hostgroup_name = str(dc).lower() + '-' + str(sahost['hostname']).split('.')[0] + '-vms'
                     hostgroup_type = 'Host VMs'
                     create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, str(sahost['hostname']).split('.')[0])
                     vm_hglist.append(hostgroup_name)
         #Create Datastore hosts
         if ds_table:
+            # Create Datacenter - Datastore host groups
             hostgroup_name = str(dc).lower() + '-datastores'
             hostgroup_type = 'Datacenter Datastores'
             create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type)
             ds_hglist.append(hostgroup_name)
             for ds in ds_table:
                 if dc == ds['dcname']:
+                    # Create Datacenter Datastore host objects
                     host_type = 'datastore'
                     create_vc_host(dc, entity, ds['dsname'], hostgroup_name, host_type)
-        #Create DataCenter - Cluster host groups
         if dc_cl_list:
             for dc_cl in dc_cl_list:
                 if dc == dc_cl['dcname']:
+                    #Create Datacenter - Cluster host groups
                     hostgroup_name = str(dc).lower() + '-clusters '
                     hostgroup_type = 'Datacenter Clusters'
                     create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type)
+                    # Create Cluster ESXi host objects
                     host_type = 'cluster'
                     create_vc_host(dc, entity, str(dc_cl['clustername']).lower(), hostgroup_name, host_type, dc_cl['clustername'])
                     cl_hglist.append(hostgroup_name)
-
+                    # Create Cluster - Virtual MAchines host groups
                     hostgroup_name = str(dc).lower() + '-' + str(dc_cl['clustername']).lower() + '-vms '
                     hostgroup_type = 'Cluster VMs'
                     create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, dc_cl['clustername'])
                     vm_hglist.append(hostgroup_name)
-
+                    # Create Cluster - ESXi host groups
                     hostgroup_name = str(dc).lower() + '-' + str(dc_cl['clustername']).lower() + '-hosts '
                     hostgroup_type = 'Cluster Hosts'
                     create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, dc_cl['clustername'])
                     host_hglist.append(hostgroup_name)
                     for cl_host in cl_host_list:
                         if dc_cl['clustername'] == cl_host['clustername']:
+                            # Create Cluster ESXi host objects
                             host_type = 'clhost'
                             create_vc_host(dc, entity, cl_host['hostname'], hostgroup_name, host_type, dc_cl['clustername'])
 
     for vm in vm_props:
+        # Create Virtual Machine host objects
         host_type = 'vm'
         if vm['clustername'] == False:
             vm_parent = str(vm['hostname']).split('.')[0]
@@ -294,11 +319,12 @@ def create_vcenter_config(entity, vm_props, dc_list, dc_sahost_list, dc_cl_list,
 
 def create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, cl_name=''):
     """
+    Add a hostgroup object to the file named after the vCenter Datacenter
 
-    :param dc:
-    :param entity:
-    :param hostgroup_name:
-    :param hostgroup_type:
+    :param dc: The vCenter Datacenter name
+    :param entity: The vCenter instance passed on the command line
+    :param hostgroup_name: The name of the hostgroup
+    :param hostgroup_type: A descriptive name for the hostgroup
     """
     vi_entity_file = '/etc/icinga/objects/vc_' + dc + '_config.cfg'
 
@@ -312,6 +338,17 @@ def create_vc_hostgroup(dc, entity, hostgroup_name, hostgroup_type, cl_name=''):
 
 
 def create_vc_host(dc, entity, host_name, hostgroup_name, host_type, cl_name=''):
+    """
+    Add a host object to the file named after the vCenter Datacenter
+
+    :param dc: The vCenter Datacenter name
+    :param entity: The vCenter instance passed on the command line
+    :param host_name: The name of the actual host object to be monitored
+    :param hostgroup_name: The name of the hostgroup
+    :param host_type: A host type that helps with determining which lines to write to the .cfg file.
+    This will typically be cluster, datastore, clhost, sahost, vm
+    :param cl_name: Optional, but allows a Cluster name to be supplied to the function
+    """
     vi_entity_file = '/etc/icinga/objects/vc_' + dc + '_hosts.cfg'
     norm_host = host_name.split('.')[0]
 
@@ -339,6 +376,16 @@ def create_vc_host(dc, entity, host_name, hostgroup_name, host_type, cl_name='')
 
 
 def create_vc_service(entity, hostgroup_name, service_template, s_description, counter_type, counter):
+    """
+    Add a service object to the file named after the vCenter Datacenter
+
+    :param entity: The vCenter instance passed on the command line
+    :param hostgroup_name: One or more hostgroups supplied as a comma separated string
+    :param service_template: The name of a template to use in the service
+    :param s_description: A descriptive name for the service
+    :param counter_type: The counter type - can be vm, datastore, host or cluster
+    :param counter: The counter name, this should match the functions in pyvinga.py
+    """
     vi_services_file = '/etc/icinga/objects/vc_services_config.cfg'
 
     f = open(vi_services_file, 'a')
