@@ -86,7 +86,7 @@ def create_commands():
     f.write('\tcommand_name\tcheck_pyvi\n')
     f.write(
         '\tcommand_line\t/opt/pyvinga/pyvinga.py -s $ARG1$ -u $USER3$ -p $USER4$ -n $ARG2$ -e \'$HOSTNAME$\' -r $ARG3$ -w $ARG4$ -c $ARG5$\n')
-    f.write('\t}')
+    f.write('\t}\n\n')
     f.close()
 
 
