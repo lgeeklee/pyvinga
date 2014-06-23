@@ -88,63 +88,63 @@ def clusterStatus(clusterObj):
     PrintOutputString(finalOutput, 'Cluster Status', 'yellow', 'red', 'grey')
 
 
-def CpuReady(vmObj, content, perf_dict):
+def CpuReady(vmObj, content, perf_dict, warning, critical):
     counter_key = StatCheck(perf_dict, 'cpu.ready.summation')
     statData = BuildQuery(content, counter_key, "", vmObj)
     finalOutput = (statData / 20000 * 100)
-    PrintOutputFloat(finalOutput, 'CPU Ready', 5, 10, '%')
+    PrintOutputFloat(finalOutput, 'CPU Ready', warning, critical, '%')
 
 
-def CpuUsage(vmObj, content, perf_dict):
+def CpuUsage(vmObj, content, perf_dict, warning, critical):
     counter_key = StatCheck(perf_dict, 'cpu.usage.average')
     statData = BuildQuery(content, counter_key, "", vmObj)
     finalOutput = (statData / 100)
-    PrintOutputFloat(finalOutput, 'CPU Usage', 50, 90, '%')
+    PrintOutputFloat(finalOutput, 'CPU Usage', warning, critical, '%')
 
 
-def MemoryActive(vmObj, content, perf_dict):
+def MemoryActive(vmObj, content, perf_dict, warning, critical):
     counter_key = StatCheck(perf_dict, 'mem.active.average')
     statData = BuildQuery(content, counter_key, "", vmObj)
     finalOutput = (statData / 1024)
-    PrintOutputFloat(finalOutput, 'Memory Active', (80 * vmObj.summary.config.memorySizeMB / 100),
-                     (90 * vmObj.summary.config.memorySizeMB / 100), 'MB')
+    PrintOutputFloat(finalOutput, 'Memory Active', (warning * vmObj.summary.config.memorySizeMB / 100),
+                     (critical * vmObj.summary.config.memorySizeMB / 100), 'MB')
 
 
-def MemoryShared(vmObj, content, perf_dict):
+def MemoryShared(vmObj, content, perf_dict, warning, critical):
     counter_key = StatCheck(perf_dict, 'mem.shared.average')
     statData = BuildQuery(content, counter_key, "", vmObj)
     finalOutput = (statData / 1024)
-    PrintOutputFloat(finalOutput, 'Memory Shared', (98 * vmObj.summary.config.memorySizeMB / 100),
-                     (99 * vmObj.summary.config.memorySizeMB / 100), 'MB')
+    PrintOutputFloat(finalOutput, 'Memory Shared', (warning * vmObj.summary.config.memorySizeMB / 100),
+                     (critical * vmObj.summary.config.memorySizeMB / 100), 'MB')
 
 
-def MemoryBalloon(vmObj, content, perf_dict):
+def MemoryBalloon(vmObj, content, perf_dict, warning, critical):
     counter_key = StatCheck(perf_dict, 'mem.vmmemctl.average')
     statData = BuildQuery(content, counter_key, "", vmObj)
     finalOutput = (statData / 1024)
-    PrintOutputFloat(finalOutput, 'Memory Balloon', (50 * vmObj.summary.config.memorySizeMB / 100),
-                     (75 * vmObj.summary.config.memorySizeMB / 100), 'MB')
+    PrintOutputFloat(finalOutput, 'Memory Balloon', (warning * vmObj.summary.config.memorySizeMB / 100),
+                     (critical * vmObj.summary.config.memorySizeMB / 100), 'MB')
 
 
-def DataStoreIORead(vmObj, content, perf_dict):
+def DataStoreIORead(vmObj, content, perf_dict, warning, critical):
     counter_key = StatCheck(perf_dict, 'datastore.numberReadAveraged.average')
     statData = BuildQuery(content, counter_key, "*", vmObj)
-    PrintOutputFloat(statData, 'Datastore Read IOPS', 1, 2, 'IOPS')
+    PrintOutputFloat(statData, 'Datastore Read IOPS', warning, critical, 'IOPS')
 
 
-def DataStoreIOWrite(vmObj, content, perf_dict):
+def DataStoreIOWrite(vmObj, content, perf_dict, warning, critical):
     counter_key = StatCheck(perf_dict, 'datastore.numberWriteAveraged.average')
     statData = BuildQuery(content, counter_key, "*", vmObj)
-    PrintOutputFloat(statData, 'Datastore Read IOPS', 1, 2, 'IOPS')
+    PrintOutputFloat(statData, 'Datastore Read IOPS', warning, critical, 'IOPS')
 
 
-def datastoreSpace(datastoreObj):
+def datastoreSpace(datastoreObj, warning, critical):
     datastoreCapacity = float(datastoreObj.summary.capacity / 1024 / 1024 / 1024)
     datastoreFree = float(datastoreObj.summary.freeSpace / 1024 / 1024 / 1024)
     datastoreUsedPct = ((1 - (datastoreFree / datastoreCapacity)) * 100)
     extraOutput = "(Used {:.1f} GB of {:.1f} GB)".format((datastoreUsedPct * datastoreCapacity / 100),
                                                          datastoreCapacity)
-    PrintOutputFloat(datastoreUsedPct, 'Datastore Used Space', 50, 60, '%', extraOutput)
+    PrintOutputFloat(datastoreUsedPct, 'Datastore Used Space', warning, critical, '%', extraOutput)
 
 
 def datastoreStatus(datastoreObj):
@@ -256,6 +256,9 @@ def main():
     args = GetArgs()
     try:
         entity = args.entity
+        if args.counter != 'core' and args.counter != 'status':
+            warning = int(args.warning)
+            critical = int(args.critical)
         si = None
         if args.password:
             password = args.password
@@ -266,7 +269,7 @@ def main():
                               user=args.user,
                               pwd=password,
                               port=int(args.port))
-        except IOError, e:
+        except IOError as e:
             pass
         if not si:
             print('Could not connect to the specified host using specified username and password')
@@ -288,19 +291,19 @@ def main():
                     elif args.counter == 'status':
                         vmStatus(vmObj)
                     elif args.counter == 'cpu.ready':
-                        CpuReady(vmObj, content, perf_dict)
+                        CpuReady(vmObj, content, perf_dict, warning, critical)
                     elif args.counter == 'cpu.usage':
-                        CpuUsage(vmObj, content, perf_dict)
+                        CpuUsage(vmObj, content, perf_dict, warning, critical)
                     elif args.counter == 'mem.active':
-                        MemoryActive(vmObj, content, perf_dict)
+                        MemoryActive(vmObj, content, perf_dict, warning, critical)
                     elif args.counter == 'mem.shared':
-                        MemoryShared(vmObj, content, perf_dict)
+                        MemoryShared(vmObj, content, perf_dict, warning, critical)
                     elif args.counter == 'mem.balloon':
-                        MemoryBalloon(vmObj, content, perf_dict)
+                        MemoryBalloon(vmObj, content, perf_dict, warning, critical)
                     elif args.counter == 'datastore.ioread':
-                        DataStoreIORead(vmObj, content, perf_dict)
+                        DataStoreIORead(vmObj, content, perf_dict, warning, critical)
                     elif args.counter == 'datastore.iowrite':
-                        DataStoreIOWrite(vmObj, content, perf_dict)
+                        DataStoreIOWrite(vmObj, content, perf_dict, warning, critical)
                     else:
                         print "No supported counter found"
                 elif (vm['name'] == entity) and ((vm['runtime.powerState'] == "poweredOff") or (vm['runtime.powerState'] == "suspended")):
@@ -331,7 +334,7 @@ def main():
                     if args.counter == 'status':
                         datastoreStatus(datastoreObj)
                     elif args.counter == 'space':
-                        datastoreSpace(datastoreObj)
+                        datastoreSpace(datastoreObj, warning, critical)
                     else:
                         print "No supported counter found"
 
@@ -348,10 +351,10 @@ def main():
         else:
             print "No supported Entity type provided"
 
-    except vmodl.MethodFault, e:
+    except vmodl.MethodFault as e:
         print "Caught vmodl fault : " + e.msg
         return -1
-    except Exception, e:
+    except Exception as e:
         print "Caught exception : " + str(e)
         return -1
 
