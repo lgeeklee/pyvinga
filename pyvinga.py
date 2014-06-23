@@ -55,9 +55,9 @@ def BuildQuery(content, counterId, instance, vm):
 
 
 def vmStatus(vmObj):
-    finalOutput = vmObj.overallStatus
+    finalOutput = str(vmObj.overallStatus)
     extraOutput = '(State: ' + vmObj.summary.runtime.powerState + ')'
-    PrintOutputString(finalOutput, 'Virtual Machine Status', 'yellow', 'red', 'grey', extraOutput)
+    PrintOutputString(finalOutput, 'Virtual Machine Status', 'yellow', 'red', 'gray', extraOutput)
 
 
 def vmCore(vmObj):
@@ -84,8 +84,8 @@ def hostCore(hostObj):
 
 
 def clusterStatus(clusterObj):
-    finalOutput = clusterObj.overallStatus
-    PrintOutputString(finalOutput, 'Cluster Status', 'yellow', 'red', 'grey')
+    finalOutput = str(clusterObj.overallStatus)
+    PrintOutputString(finalOutput, 'Cluster Status', 'yellow', 'red', 'gray')
 
 
 def CpuReady(vmObj, content, perf_dict, warning, critical):
@@ -148,9 +148,9 @@ def datastoreSpace(datastoreObj, warning, critical):
 
 
 def datastoreStatus(datastoreObj):
-    finalOutput = datastoreObj.overallStatus
+    finalOutput = str(datastoreObj.overallStatus)
     extraOutput = '(Type: ' + datastoreObj.summary.type + ')'
-    PrintOutputString(finalOutput, 'Datastore Status', 'yellow', 'red', 'grey', extraOutput)
+    PrintOutputString(finalOutput, 'Datastore Status', 'yellow', 'red', 'gray', extraOutput)
 
 
 def StatCheck(perf_dict, counter_name):
@@ -246,9 +246,9 @@ def write_perf_dictionary(content, file_perf_dic):
 
 def create_perf_dictionary(content):
     if content.about.name == 'VMware vCenter Server':
-        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//vcenter_perfdic.txt')
     elif content.about.name == 'VMware ESXi':
-        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//host_perfdic.txt')
     return perf_dict
 
 
