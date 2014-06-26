@@ -364,6 +364,7 @@ def main():
                         cl_status(cl_moref)
                     else:
                         print "No supported counter found"
+                        exit(STATE_UNKNOWN)
 
         else:
             print "No supported Entity type provided"
