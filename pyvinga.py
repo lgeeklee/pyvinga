@@ -126,16 +126,22 @@ def MemoryBalloon(vmObj, content, perf_dict, warning, critical):
                      (critical * vmObj.summary.config.memorySizeMB / 100), 'MB')
 
 
-def DataStoreIORead(vmObj, content, perf_dict, warning, critical):
-    counter_key = StatCheck(perf_dict, 'datastore.numberReadAveraged.average')
-    statData = BuildQuery(content, counter_key, "*", vmObj)
-    PrintOutputFloat(statData, 'Datastore Read IOPS', warning, critical, 'IOPS')
+def vm_ds_io(vmObj, content, perf_dict, warning, critical):
+    counter_key_read = StatCheck(perf_dict, 'datastore.numberReadAveraged.average')
+    counter_key_write = StatCheck(perf_dict, 'datastore.numberWriteAveraged.average')
+    statData_read = BuildQuery(content, counter_key_read, "*", vmObj)
+    statData_write = BuildQuery(content, counter_key_write, "*", vmObj)
+    statdata_total = statData_read + statData_write
+    PrintOutputFloat(statdata_total, 'Datastore IOPS', warning, critical, 'IOPS')
 
 
-def DataStoreIOWrite(vmObj, content, perf_dict, warning, critical):
-    counter_key = StatCheck(perf_dict, 'datastore.numberWriteAveraged.average')
-    statData = BuildQuery(content, counter_key, "*", vmObj)
-    PrintOutputFloat(statData, 'Datastore Read IOPS', warning, critical, 'IOPS')
+def vm_ds_latency(vmObj, content, perf_dict, warning, critical):
+    counter_key_read = StatCheck(perf_dict, 'datastore.totalReadLatency.average')
+    counter_key_write = StatCheck(perf_dict, 'datastore.totalWriteLatency.average')
+    statData_read = BuildQuery(content, counter_key_read, "*", vmObj)
+    statData_write = BuildQuery(content, counter_key_write, "*", vmObj)
+    statdata_total = statData_read + statData_write
+    PrintOutputFloat(statdata_total, 'Datastore Latency', warning, critical, 'ms')
 
 
 def datastoreSpace(datastoreObj, warning, critical):
@@ -246,9 +252,9 @@ def write_perf_dictionary(content, file_perf_dic):
 
 def create_perf_dictionary(content):
     if content.about.name == 'VMware vCenter Server':
-        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//vcenter_perfdic.txt')
     elif content.about.name == 'VMware ESXi':
-        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//host_perfdic.txt')
     return perf_dict
 
 
@@ -300,10 +306,10 @@ def main():
                         MemoryShared(vmObj, content, perf_dict, warning, critical)
                     elif args.counter == 'mem.balloon':
                         MemoryBalloon(vmObj, content, perf_dict, warning, critical)
-                    elif args.counter == 'datastore.ioread':
-                        DataStoreIORead(vmObj, content, perf_dict, warning, critical)
-                    elif args.counter == 'datastore.iowrite':
-                        DataStoreIOWrite(vmObj, content, perf_dict, warning, critical)
+                    elif args.counter == 'datastore.io':
+                        vm_ds_io(vmObj, content, perf_dict, warning, critical)
+                    elif args.counter == 'datastore.latency':
+                        vm_ds_latency(vmObj, content, perf_dict, warning, critical)
                     else:
                         print "No supported counter found"
                 elif (vm['name'] == entity) and ((vm['runtime.powerState'] == "poweredOff") or (vm['runtime.powerState'] == "suspended")):
