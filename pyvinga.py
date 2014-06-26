@@ -265,9 +265,9 @@ def write_perf_dictionary(content, file_perf_dic):
 
 def create_perf_dictionary(content):
     if content.about.name == 'VMware vCenter Server':
-        perf_dict = write_perf_dictionary(content, 'C://Temp//vcenter_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
     elif content.about.name == 'VMware ESXi':
-        perf_dict = write_perf_dictionary(content, 'C://Temp//host_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
     return perf_dict
 
 
