@@ -113,6 +113,7 @@ def create_esxi_config(entity, vmProps, dsProps):
     create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Memory Balloon', 'vm', 'mem.balloon', 50, 75)
     create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Datastore IO', 'vm', 'datastore.io', 250, 500)
     create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Datastore Latency', 'vm', 'datastore.latency', 10, 20)
+    create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Network Usage', 'vm', 'network.usage', 10, 100)
     for vm in vmProps:
         create_esx_vm(hostgroup_type, hostgroup_name, entity, vm['name'], 0, 0)
 
@@ -346,6 +347,7 @@ def create_vcenter_config(entity, vm_props, dc_list, dc_sahost_list, dc_cl_list,
     create_vc_service(entity, ','.join(vm_hglist), 'generic-service', 'Memory Balloon', 'vm', 'mem.balloon', 50, 60)
     create_vc_service(entity, ','.join(vm_hglist), 'generic-service', 'Datastore IO', 'vm', 'datastore.io', 250, 500)
     create_vc_service(entity, ','.join(vm_hglist), 'generic-service', 'Datastore Latency', 'vm', 'datastore.latency', 10, 20)
+    create_vc_service(entity, ','.join(vm_hglist), 'generic-service', 'Network Usage', 'vm', 'network.usage', 10, 100)
     #Create Datastore services
     create_vc_service(entity, ','.join(ds_hglist), 'generic-service', 'Datastore Space', 'datastore', 'space', 75, 85)
     #Create Host services

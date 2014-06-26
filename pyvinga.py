@@ -144,6 +144,15 @@ def vm_ds_latency(vmObj, content, perf_dict, warning, critical):
     PrintOutputFloat(statdata_total, 'Datastore Latency', warning, critical, 'ms')
 
 
+def vm_net_usage(vmObj, content, perf_dict, warning, critical):
+    counter_key_read = StatCheck(perf_dict, 'net.received.average')
+    counter_key_write = StatCheck(perf_dict, 'net.transmitted.average')
+    statData_rx = BuildQuery(content, counter_key_read, "", vmObj)
+    statData_tx = BuildQuery(content, counter_key_write, "", vmObj)
+    statdata_total = (statData_rx + statData_tx) * 8 / 1024
+    PrintOutputFloat(statdata_total, 'Network Usage', warning, critical, 'Mbps')
+
+
 def datastoreSpace(datastoreObj, warning, critical):
     datastoreCapacity = float(datastoreObj.summary.capacity / 1024 / 1024 / 1024)
     datastoreFree = float(datastoreObj.summary.freeSpace / 1024 / 1024 / 1024)
@@ -252,9 +261,9 @@ def write_perf_dictionary(content, file_perf_dic):
 
 def create_perf_dictionary(content):
     if content.about.name == 'VMware vCenter Server':
-        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//vcenter_perfdic.txt')
     elif content.about.name == 'VMware ESXi':
-        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//host_perfdic.txt')
     return perf_dict
 
 
@@ -310,6 +319,8 @@ def main():
                         vm_ds_io(vmObj, content, perf_dict, warning, critical)
                     elif args.counter == 'datastore.latency':
                         vm_ds_latency(vmObj, content, perf_dict, warning, critical)
+                    elif args.counter == 'network.traffic':
+                        vm_net_usage(vmObj, content, perf_dict, warning, critical)
                     else:
                         print "No supported counter found"
                 elif (vm['name'] == entity) and ((vm['runtime.powerState'] == "poweredOff") or (vm['runtime.powerState'] == "suspended")):
