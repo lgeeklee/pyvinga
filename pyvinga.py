@@ -50,8 +50,12 @@ def build_query(content, counterId, instance, vm):
     query = vim.PerformanceManager.QuerySpec(intervalId=20, entity=vm, metricId=[metricId], startTime=startTime,
                                              endTime=endTime)
     perfResults = perfManager.QueryPerf(querySpec=[query])
-    statdata = float(sum(perfResults[0].value[0].value))
-    return statdata
+    if perfResults:
+        statdata = float(sum(perfResults[0].value[0].value))
+        return statdata
+    else:
+        print 'ERROR: Performance results empty'
+        exit(STATE_WARNING)
 
 
 def vm_status(vm_moref):
@@ -261,9 +265,9 @@ def write_perf_dictionary(content, file_perf_dic):
 
 def create_perf_dictionary(content):
     if content.about.name == 'VMware vCenter Server':
-        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//vcenter_perfdic.txt')
     elif content.about.name == 'VMware ESXi':
-        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//host_perfdic.txt')
     return perf_dict
 
 
@@ -322,7 +326,7 @@ def main():
                     elif args.counter == 'network.usage':
                         vm_net_usage(vm_moref, content, perf_dict, warning, critical)
                     else:
-                        print "No supported counter found"
+                        print 'ERROR: No supported counter found'
                         exit(STATE_UNKNOWN)
                 elif (vm['name'] == entity) and ((vm['runtime.powerState'] == "poweredOff") or (vm['runtime.powerState'] == "suspended")):
                     vm_moref = vm['moref']
@@ -331,7 +335,7 @@ def main():
                     elif args.counter == 'status':
                         vm_status(vm_moref)
                     else:
-                        print "Virtual Machine is powered off"
+                        print 'ERROR: Virtual Machine is powered off'
                         exit(STATE_UNKNOWN)
 
         elif args.type == 'host':
@@ -342,7 +346,7 @@ def main():
                     if args.counter == 'core':
                         host_core(host_moref)
                     else:
-                        print "No supported counter found"
+                        print 'ERROR: No supported counter found'
                         exit(STATE_UNKNOWN)
 
         elif args.type == 'datastore':
@@ -355,7 +359,7 @@ def main():
                     elif args.counter == 'space':
                         ds_space(ds_moref, warning, critical)
                     else:
-                        print "No supported counter found"
+                        print 'ERROR: No supported counter found'
                         exit(STATE_UNKNOWN)
 
         elif args.type == 'cluster':
@@ -366,11 +370,11 @@ def main():
                     if args.counter == 'status':
                         cl_status(cl_moref)
                     else:
-                        print "No supported counter found"
+                        print 'ERROR: No supported counter found'
                         exit(STATE_UNKNOWN)
 
         else:
-            print "No supported Entity type provided"
+            print 'ERROR: No supported Entity type provided'
 
     except vmodl.MethodFault as e:
         print "Caught vmodl fault : " + e.msg
