@@ -323,6 +323,7 @@ def main():
                         vm_net_usage(vm_moref, content, perf_dict, warning, critical)
                     else:
                         print "No supported counter found"
+                        exit(STATE_UNKNOWN)
                 elif (vm['name'] == entity) and ((vm['runtime.powerState'] == "poweredOff") or (vm['runtime.powerState'] == "suspended")):
                     vm_moref = vm['moref']
                     if args.counter == 'core':
@@ -342,6 +343,7 @@ def main():
                         host_core(host_moref)
                     else:
                         print "No supported counter found"
+                        exit(STATE_UNKNOWN)
 
         elif args.type == 'datastore':
             dsProps = GetProperties(content, [vim.Datastore], ['name'], vim.Datastore)
@@ -354,6 +356,7 @@ def main():
                         ds_space(ds_moref, warning, critical)
                     else:
                         print "No supported counter found"
+                        exit(STATE_UNKNOWN)
 
         elif args.type == 'cluster':
             clProps = GetProperties(content, [vim.ClusterComputeResource], ['name'], vim.ClusterComputeResource)
