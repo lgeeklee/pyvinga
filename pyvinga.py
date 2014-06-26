@@ -42,7 +42,7 @@ def GetArgs():
     return args
 
 
-def BuildQuery(content, counterId, instance, vm):
+def build_query(content, counterId, instance, vm):
     perfManager = content.perfManager
     metricId = vim.PerformanceManager.MetricId(counterId=counterId, instance=instance)
     startTime = datetime.now() - timedelta(seconds=60)
@@ -50,30 +50,30 @@ def BuildQuery(content, counterId, instance, vm):
     query = vim.PerformanceManager.QuerySpec(intervalId=20, entity=vm, metricId=[metricId], startTime=startTime,
                                              endTime=endTime)
     perfResults = perfManager.QueryPerf(querySpec=[query])
-    statData = float(sum(perfResults[0].value[0].value))
-    return statData
+    statdata = float(sum(perfResults[0].value[0].value))
+    return statdata
 
 
-def vmStatus(vmObj):
-    finalOutput = str(vmObj.overallStatus)
-    extraOutput = '(State: ' + vmObj.summary.runtime.powerState + ')'
-    PrintOutputString(finalOutput, 'Virtual Machine Status', 'yellow', 'red', 'gray', extraOutput)
+def vm_status(vm_moref):
+    finalOutput = str(vm_moref.overallStatus)
+    extraOutput = '(State: ' + vm_moref.summary.runtime.powerState + ')'
+    print_output_string(finalOutput, 'Virtual Machine Status', 'yellow', 'red', 'gray', extraOutput)
 
 
-def vmCore(vmObj):
-    vmconfig = vmObj.summary.config
+def vm_core(vm_moref):
+    vmconfig = vm_moref.summary.config
     if (float(vmconfig.memorySizeMB) / 1024).is_integer():
         vm_memory = str(vmconfig.memorySizeMB / 1024) + ' GB'
     else:
         vm_memory = str(vmconfig.memorySizeMB) + ' MB'
     print "{}, {}, {} vCPU(s), {} Memory".format(vmconfig.annotation,
-                                                        vmconfig.guestFullName, vmObj.summary.config.numCpu,
+                                                        vmconfig.guestFullName, vm_moref.summary.config.numCpu,
                                                         (vm_memory))
     exit(STATE_OK)
 
 
-def hostCore(hostObj):
-    hosthardware = hostObj.summary.hardware
+def host_core(host_moref):
+    hosthardware = host_moref.summary.hardware
     print "{}, {} x {} CPU(s) ({} Cores, {} Logical), {:.0f} GB Memory".format(hosthardware.model,
                                                                                hosthardware.numCpuPkgs,
                                                                                hosthardware.cpuModel,
@@ -83,89 +83,89 @@ def hostCore(hostObj):
     exit(STATE_OK)
 
 
-def clusterStatus(clusterObj):
-    finalOutput = str(clusterObj.overallStatus)
-    PrintOutputString(finalOutput, 'Cluster Status', 'yellow', 'red', 'gray')
+def cl_status(cl_moref):
+    final_output = str(cl_moref.overallStatus)
+    print_output_string(final_output, 'Cluster Status', 'yellow', 'red', 'gray')
 
 
-def CpuReady(vmObj, content, perf_dict, warning, critical):
+def vm_cpu_ready(vm_moref, content, perf_dict, warning, critical):
     counter_key = StatCheck(perf_dict, 'cpu.ready.summation')
-    statData = BuildQuery(content, counter_key, "", vmObj)
-    finalOutput = (statData / 20000 * 100)
-    PrintOutputFloat(finalOutput, 'CPU Ready', warning, critical, '%')
+    statdata = build_query(content, counter_key, "", vm_moref)
+    final_output = (statdata / 20000 * 100)
+    print_output_float(final_output, 'CPU Ready', warning, critical, '%')
 
 
-def CpuUsage(vmObj, content, perf_dict, warning, critical):
+def vm_cpu_usage(vm_moref, content, perf_dict, warning, critical):
     counter_key = StatCheck(perf_dict, 'cpu.usage.average')
-    statData = BuildQuery(content, counter_key, "", vmObj)
-    finalOutput = (statData / 100)
-    PrintOutputFloat(finalOutput, 'CPU Usage', warning, critical, '%')
+    statdata = build_query(content, counter_key, "", vm_moref)
+    final_output = (statdata / 100)
+    print_output_float(final_output, 'CPU Usage', warning, critical, '%')
 
 
-def MemoryActive(vmObj, content, perf_dict, warning, critical):
+def vm_mem_active(vm_moref, content, perf_dict, warning, critical):
     counter_key = StatCheck(perf_dict, 'mem.active.average')
-    statData = BuildQuery(content, counter_key, "", vmObj)
-    finalOutput = (statData / 1024)
-    PrintOutputFloat(finalOutput, 'Memory Active', (warning * vmObj.summary.config.memorySizeMB / 100),
-                     (critical * vmObj.summary.config.memorySizeMB / 100), 'MB')
+    statdata = build_query(content, counter_key, "", vm_moref)
+    final_output = (statdata / 1024)
+    print_output_float(final_output, 'Memory Active', (warning * vm_moref.summary.config.memorySizeMB / 100),
+                     (critical * vm_moref.summary.config.memorySizeMB / 100), 'MB')
 
 
-def MemoryShared(vmObj, content, perf_dict, warning, critical):
+def vm_mem_shared(vm_moref, content, perf_dict, warning, critical):
     counter_key = StatCheck(perf_dict, 'mem.shared.average')
-    statData = BuildQuery(content, counter_key, "", vmObj)
-    finalOutput = (statData / 1024)
-    PrintOutputFloat(finalOutput, 'Memory Shared', (warning * vmObj.summary.config.memorySizeMB / 100),
-                     (critical * vmObj.summary.config.memorySizeMB / 100), 'MB')
+    statdata = build_query(content, counter_key, "", vm_moref)
+    final_output = (statdata / 1024)
+    print_output_float(final_output, 'Memory Shared', (warning * vm_moref.summary.config.memorySizeMB / 100),
+                     (critical * vm_moref.summary.config.memorySizeMB / 100), 'MB')
 
 
-def MemoryBalloon(vmObj, content, perf_dict, warning, critical):
+def vm_mem_balloon(vm_moref, content, perf_dict, warning, critical):
     counter_key = StatCheck(perf_dict, 'mem.vmmemctl.average')
-    statData = BuildQuery(content, counter_key, "", vmObj)
-    finalOutput = (statData / 1024)
-    PrintOutputFloat(finalOutput, 'Memory Balloon', (warning * vmObj.summary.config.memorySizeMB / 100),
-                     (critical * vmObj.summary.config.memorySizeMB / 100), 'MB')
+    statdata = build_query(content, counter_key, "", vm_moref)
+    final_output = (statdata / 1024)
+    print_output_float(final_output, 'Memory Balloon', (warning * vm_moref.summary.config.memorySizeMB / 100),
+                     (critical * vm_moref.summary.config.memorySizeMB / 100), 'MB')
 
 
-def vm_ds_io(vmObj, content, perf_dict, warning, critical):
+def vm_ds_io(vm_moref, content, perf_dict, warning, critical):
     counter_key_read = StatCheck(perf_dict, 'datastore.numberReadAveraged.average')
     counter_key_write = StatCheck(perf_dict, 'datastore.numberWriteAveraged.average')
-    statData_read = BuildQuery(content, counter_key_read, "*", vmObj)
-    statData_write = BuildQuery(content, counter_key_write, "*", vmObj)
-    statdata_total = statData_read + statData_write
-    PrintOutputFloat(statdata_total, 'Datastore IOPS', warning, critical, 'IOPS')
+    statdata_read = build_query(content, counter_key_read, "*", vm_moref)
+    statdata_write = build_query(content, counter_key_write, "*", vm_moref)
+    statdata_total = statdata_read + statdata_write
+    print_output_float(statdata_total, 'Datastore IOPS', warning, critical, 'IOPS')
 
 
-def vm_ds_latency(vmObj, content, perf_dict, warning, critical):
+def vm_ds_latency(vm_moref, content, perf_dict, warning, critical):
     counter_key_read = StatCheck(perf_dict, 'datastore.totalReadLatency.average')
     counter_key_write = StatCheck(perf_dict, 'datastore.totalWriteLatency.average')
-    statData_read = BuildQuery(content, counter_key_read, "*", vmObj)
-    statData_write = BuildQuery(content, counter_key_write, "*", vmObj)
-    statdata_total = statData_read + statData_write
-    PrintOutputFloat(statdata_total, 'Datastore Latency', warning, critical, 'ms')
+    statdata_read = build_query(content, counter_key_read, "*", vm_moref)
+    statdata_write = build_query(content, counter_key_write, "*", vm_moref)
+    statdata_total = statdata_read + statdata_write
+    print_output_float(statdata_total, 'Datastore Latency', warning, critical, 'ms')
 
 
-def vm_net_usage(vmObj, content, perf_dict, warning, critical):
+def vm_net_usage(vm_moref, content, perf_dict, warning, critical):
     counter_key_read = StatCheck(perf_dict, 'net.received.average')
     counter_key_write = StatCheck(perf_dict, 'net.transmitted.average')
-    statData_rx = BuildQuery(content, counter_key_read, "", vmObj)
-    statData_tx = BuildQuery(content, counter_key_write, "", vmObj)
-    statdata_total = (statData_rx + statData_tx) * 8 / 1024
-    PrintOutputFloat(statdata_total, 'Network Usage', warning, critical, 'Mbps')
+    statdata_rx = build_query(content, counter_key_read, "", vm_moref)
+    statdata_tx = build_query(content, counter_key_write, "", vm_moref)
+    statdata_total = (statdata_rx + statdata_tx) * 8 / 1024
+    print_output_float(statdata_total, 'Network Usage', warning, critical, 'Mbps')
 
 
-def datastoreSpace(datastoreObj, warning, critical):
-    datastoreCapacity = float(datastoreObj.summary.capacity / 1024 / 1024 / 1024)
-    datastoreFree = float(datastoreObj.summary.freeSpace / 1024 / 1024 / 1024)
-    datastoreUsedPct = ((1 - (datastoreFree / datastoreCapacity)) * 100)
-    extraOutput = "(Used {:.1f} GB of {:.1f} GB)".format((datastoreUsedPct * datastoreCapacity / 100),
-                                                         datastoreCapacity)
-    PrintOutputFloat(datastoreUsedPct, 'Datastore Used Space', warning, critical, '%', extraOutput)
+def ds_space(ds_moref, warning, critical):
+    datastore_capacity = float(ds_moref.summary.capacity / 1024 / 1024 / 1024)
+    datastore_free = float(ds_moref.summary.freeSpace / 1024 / 1024 / 1024)
+    datastore_used_pct = ((1 - (datastore_free / datastore_capacity)) * 100)
+    extraOutput = "(Used {:.1f} GB of {:.1f} GB)".format((datastore_used_pct * datastore_capacity / 100),
+                                                         datastore_capacity)
+    print_output_float(datastore_used_pct, 'Datastore Used Space', warning, critical, '%', extraOutput)
 
 
-def datastoreStatus(datastoreObj):
-    finalOutput = str(datastoreObj.overallStatus)
-    extraOutput = '(Type: ' + datastoreObj.summary.type + ')'
-    PrintOutputString(finalOutput, 'Datastore Status', 'yellow', 'red', 'gray', extraOutput)
+def ds_status(ds_moref):
+    final_output = str(ds_moref.overallStatus)
+    extraOutput = '(Type: ' + ds_moref.summary.type + ')'
+    print_output_string(final_output, 'Datastore Status', 'yellow', 'red', 'gray', extraOutput)
 
 
 def StatCheck(perf_dict, counter_name):
@@ -212,7 +212,7 @@ def GetProperties(content, viewType, props, specType):
     return gpOutput
 
 
-def PrintOutputFloat(finalOutput, statName, warnValue, critValue, suffix, extraOutput=''):
+def print_output_float(finalOutput, statName, warnValue, critValue, suffix, extraOutput=''):
     if finalOutput >= critValue:
         print "{} - {} is {:.1f} {} {}".format(state_tuple[STATE_CRITICAL], statName, finalOutput, suffix, extraOutput)
         exit(STATE_CRITICAL)
@@ -224,7 +224,7 @@ def PrintOutputFloat(finalOutput, statName, warnValue, critValue, suffix, extraO
         exit(STATE_OK)
 
 
-def PrintOutputString(finalOutput, statName, warnValue, critValue, unkValue, extraOutput=''):
+def print_output_string(finalOutput, statName, warnValue, critValue, unkValue, extraOutput=''):
     if finalOutput == critValue:
         print "{} - {} is {} {}".format(state_tuple[STATE_CRITICAL], statName, finalOutput, extraOutput)
         exit(STATE_CRITICAL)
@@ -261,9 +261,9 @@ def write_perf_dictionary(content, file_perf_dic):
 
 def create_perf_dictionary(content):
     if content.about.name == 'VMware vCenter Server':
-        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//vcenter_perfdic.txt')
     elif content.about.name == 'VMware ESXi':
-        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//host_perfdic.txt')
     return perf_dict
 
 
@@ -300,35 +300,35 @@ def main():
             vmProps = GetProperties(content, [vim.VirtualMachine], ['name', 'runtime.powerState'], vim.VirtualMachine)
             for vm in vmProps:
                 if (vm['name'] == entity) and (vm['runtime.powerState'] == "poweredOn"):
-                    vmObj = vm['moref']
+                    vm_moref = vm['moref']
                     if args.counter == 'core':
-                        vmCore(vmObj)
+                        vm_core(vm_moref)
                     elif args.counter == 'status':
-                        vmStatus(vmObj)
+                        vm_status(vm_moref)
                     elif args.counter == 'cpu.ready':
-                        CpuReady(vmObj, content, perf_dict, warning, critical)
+                        vm_cpu_ready(vm_moref, content, perf_dict, warning, critical)
                     elif args.counter == 'cpu.usage':
-                        CpuUsage(vmObj, content, perf_dict, warning, critical)
+                        vm_cpu_usage(vm_moref, content, perf_dict, warning, critical)
                     elif args.counter == 'mem.active':
-                        MemoryActive(vmObj, content, perf_dict, warning, critical)
+                        vm_mem_active(vm_moref, content, perf_dict, warning, critical)
                     elif args.counter == 'mem.shared':
-                        MemoryShared(vmObj, content, perf_dict, warning, critical)
+                        vm_mem_shared(vm_moref, content, perf_dict, warning, critical)
                     elif args.counter == 'mem.balloon':
-                        MemoryBalloon(vmObj, content, perf_dict, warning, critical)
+                        vm_mem_balloon(vm_moref, content, perf_dict, warning, critical)
                     elif args.counter == 'datastore.io':
-                        vm_ds_io(vmObj, content, perf_dict, warning, critical)
+                        vm_ds_io(vm_moref, content, perf_dict, warning, critical)
                     elif args.counter == 'datastore.latency':
-                        vm_ds_latency(vmObj, content, perf_dict, warning, critical)
-                    elif args.counter == 'network.traffic':
-                        vm_net_usage(vmObj, content, perf_dict, warning, critical)
+                        vm_ds_latency(vm_moref, content, perf_dict, warning, critical)
+                    elif args.counter == 'network.usage':
+                        vm_net_usage(vm_moref, content, perf_dict, warning, critical)
                     else:
                         print "No supported counter found"
                 elif (vm['name'] == entity) and ((vm['runtime.powerState'] == "poweredOff") or (vm['runtime.powerState'] == "suspended")):
-                    vmObj = vm['moref']
+                    vm_moref = vm['moref']
                     if args.counter == 'core':
-                        vmCore(vmObj)
+                        vm_core(vm_moref)
                     elif args.counter == 'status':
-                        vmStatus(vmObj)
+                        vm_status(vm_moref)
                     else:
                         print "Virtual Machine is powered off"
                         exit(STATE_UNKNOWN)
@@ -337,9 +337,9 @@ def main():
             dsProps = GetProperties(content, [vim.HostSystem], ['name'], vim.HostSystem)
             for host in dsProps:
                 if host['name'] == entity:
-                    hostObj = host['moref']
+                    host_moref = host['moref']
                     if args.counter == 'core':
-                        hostCore(hostObj)
+                        host_core(host_moref)
                     else:
                         print "No supported counter found"
 
@@ -347,11 +347,11 @@ def main():
             dsProps = GetProperties(content, [vim.Datastore], ['name'], vim.Datastore)
             for datastore in dsProps:
                 if datastore['name'] == entity:
-                    datastoreObj = datastore['moref']
+                    ds_moref = datastore['moref']
                     if args.counter == 'status':
-                        datastoreStatus(datastoreObj)
+                        ds_status(ds_moref)
                     elif args.counter == 'space':
-                        datastoreSpace(datastoreObj, warning, critical)
+                        ds_space(ds_moref, warning, critical)
                     else:
                         print "No supported counter found"
 
@@ -359,9 +359,9 @@ def main():
             clProps = GetProperties(content, [vim.ClusterComputeResource], ['name'], vim.ClusterComputeResource)
             for cluster in clProps:
                 if cluster['name'] == entity:
-                    clusterObj = cluster['moref']
+                    cl_moref = cluster['moref']
                     if args.counter == 'status':
-                        clusterStatus(clusterObj)
+                        cl_status(cl_moref)
                     else:
                         print "No supported counter found"
 
