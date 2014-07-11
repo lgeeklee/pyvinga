@@ -405,7 +405,7 @@ def create_vc_host(dc, entity, host_name, hostgroup_name, host_type, warning, cr
     f.write('\tuse\t\t\tgeneric-host\n')
     if host_type == 'cluster':
         f.write('\thost_name\t\t' + cl_name + '\n')
-    if host_type == 'host':
+    if host_type == 'clhost' or host_type == 'sahost':
         f.write('\thost_name\t\t' + host_name + '\n')
     else:
         f.write('\thost_name\t\t' + norm_host + '\n')
