@@ -34,7 +34,7 @@ def GetArgs():
     return args
 
 
-def GetProperties(content, viewType, props, specType):
+def get_properties(content, viewType, props, specType):
     # Build a view and get basic properties for all Virtual Machines
     """
     Obtains a list of specific properties for a particular Managed Object Reference data object.
@@ -92,7 +92,7 @@ def create_commands():
 
 def create_esxi_config(entity, vmProps, dsProps):
     """
-    Creathe the configuration for an ESXi host
+    Create the the configuration for an ESXi host
 
     :param entity: The ESXi host passed on the command line
     :param vmProps: The Virtual Machine hierarchy details for this ESXi host
@@ -115,7 +115,7 @@ def create_esxi_config(entity, vmProps, dsProps):
     create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Datastore Latency', 'vm', 'datastore.latency', 10, 20)
     create_esxi_service(hostgroup_type, entity, norm_entity, 'generic-service', 'Network Usage', 'vm', 'network.usage', 10, 100)
     for vm in vmProps:
-        create_esx_vm(hostgroup_type, hostgroup_name, entity, vm['name'], 0, 0)
+        create_esxi_vm(hostgroup_type, hostgroup_name, entity, vm['name'], 0, 0)
 
     h_description = 'Datastores'
     hostgroup_type = 'datastores'
@@ -133,12 +133,12 @@ def create_esxi_config(entity, vmProps, dsProps):
 
 def create_esxi_hostgroup(hostgroup_type, entity, norm_entity, h_description):
     """
+    Create the ESXi Host Group config
 
-    :param hostgroup_type:
-    :param entity:
-    :param norm_entity:
-    :param h_description:
-    :return:
+    :param hostgroup_type: Hyphen separated friendly name for host group type
+    :param entity: The ESXi host passed on the command line
+    :param norm_entity: The ESXi host name passed from command line with the FQDN suffix
+    :param h_description: Friendly description for host group type
     """
     vi_entity_file = '/etc/icinga/objects/vi_' + norm_entity + '_config.cfg'
     hostgroup_name = norm_entity + '-' + hostgroup_type
@@ -157,17 +157,18 @@ def create_esxi_hostgroup(hostgroup_type, entity, norm_entity, h_description):
 
 def create_esxi_service(hostgroup_type, entity, norm_entity, service_template, s_description, counter_type, counter, warning, critical, group=True):
     """
+    Generates the service definitions for VMs, Host and Datastore on an ESXi host
 
-    :param hostgroup_type:
-    :param entity:
-    :param norm_entity:
+    :param hostgroup_type: Hyphen separated friendly name for host group type
+    :param entity: The ESXi host passed on the command line
+    :param norm_entity: The ESXi host name passed from command line with the FQDN suffix
     :param service_template:
-    :param s_description:
-    :param counter_type:
-    :param counter:
+    :param s_description: Friendly description for the service
+    :param counter_type: Type of counter being supplied (e.g. vm, host, datastore)
+    :param counter: Friendly name of the counter
     :param warning: The warning value for the counter supplied by the command definition
     :param critical: The critical value for the counter supplied by the command definition
-    :param group:
+    :param group: Whether the service should be assigned to a host group
     """
     vi_entity_file = '/etc/icinga/objects/vi_' + norm_entity + '_config.cfg'
     hostgroup_name = norm_entity + '-' + hostgroup_type
@@ -187,6 +188,11 @@ def create_esxi_service(hostgroup_type, entity, norm_entity, service_template, s
 
 
 def create_esxi_host(entity):
+    """
+    Generates the ESXi host definition for a stand alone ESXi host connection
+
+    :param entity: The ESXi host passed on the command line
+    """
     norm_entity = entity.split('.')[0]
     vi_entity_file = '/etc/icinga/objects/vi_' + norm_entity + '_hosts.cfg'
 
@@ -201,13 +207,14 @@ def create_esxi_host(entity):
     f.close()
 
 
-def create_esx_vm(hostgroup_type, hostgroup_name, entity, host_name, warning, critical):
+def create_esxi_vm(hostgroup_type, hostgroup_name, entity, host_name, warning, critical):
     """
+    Generates the individual Virtual Machine host definitions for a stand alone ESXi host connection
 
-    :param hostgroup_type:
-    :param hostgroup_name:
-    :param entity:
-    :param host_name:
+    :param hostgroup_type: Hyphen separated friendly name for host group type
+    :param hostgroup_name: Name of the ESXi host group generated previously
+    :param entity: The ESXi host passed on the command line
+    :param host_name: The name of the Virtual Machine
     :param warning: The warning value for the counter supplied by the command definition
     :param critical: The critical value for the counter supplied by the command definition
     """
@@ -230,11 +237,12 @@ def create_esx_vm(hostgroup_type, hostgroup_name, entity, host_name, warning, cr
 
 def create_esxi_ds(hostgroup_type, hostgroup_name, entity, host_name, warning, critical):
     """
+    Generates the individual Datastore host definitions for a stand alone ESXi host connection
 
-    :param hostgroup_type:
-    :param hostgroup_name:
-    :param entity:
-    :param host_name:
+    :param hostgroup_type: Hyphen separated friendly name for host group type
+    :param hostgroup_name: Name of the ESXi host group generated previously
+    :param entity: The ESXi host passed on the command line
+    :param host_name: The name of the Datastore
     :param warning: The warning value for the counter supplied by the command definition
     :param critical: The critical value for the counter supplied by the command definition
     """
@@ -442,8 +450,13 @@ def create_vc_service(entity, hostgroup_name, service_template, s_description, c
 
 
 def get_hierarchy(content):
-    vm_props = GetProperties(content, [vim.VirtualMachine], ['name', 'runtime.host'], vim.VirtualMachine)
-    host_props = GetProperties(content, [vim.HostSystem], ['name', 'parent'], vim.HostSystem)
+    """
+    Build the hierarchy of Clusters, Stand ALone Hosts, CLuster Hosts, DataCenters and Virtual Machines
+
+    :param content: ServiceInstance Managed Object
+    """
+    vm_props = get_properties(content, [vim.VirtualMachine], ['name', 'runtime.host'], vim.VirtualMachine)
+    host_props = get_properties(content, [vim.HostSystem], ['name', 'parent'], vim.HostSystem)
     # Get the Datacenter to Stand Alone Host list
     dc_sahost_list = []
     # Get the Datacenter to Cluster list
@@ -499,7 +512,12 @@ def get_hierarchy(content):
 
 
 def get_datastore_hierarchy(content):
-    dc_props = GetProperties(content, [vim.Datacenter], ['name', 'datastore'], vim.Datacenter)
+    """
+    Get the Datastore hierarchy for each Datacenter
+
+    :param content: ServiceInstance Managed Object
+    """
+    dc_props = get_properties(content, [vim.Datacenter], ['name', 'datastore'], vim.Datacenter)
     ds_table = []
     for datacenter in dc_props:
         for datastore in datacenter['datastore']:

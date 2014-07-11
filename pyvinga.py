@@ -16,6 +16,7 @@ import atexit
 import getpass
 
 
+# Define specific values for the Icinga return status and also create a list
 STATE_OK = 0
 STATE_WARNING = 1
 STATE_CRITICAL = 2
@@ -42,12 +43,21 @@ def GetArgs():
     return args
 
 
-def build_query(content, counterId, instance, vm):
+def build_query(content, counterId, instance, vm_moref):
+    """
+    Creates the query for performance stats in the correct format
+
+    :param content: ServiceInstance Managed Object
+    :param counterId: The returned integer counter Id assigned to the named performance counter
+    :param instance: instance of the performance counter to return (typically empty but it may need to contain a value
+    for example - with VM virtual disk queries)
+    :param vm_moref: Managed Object Reference for the Virtual Machine
+    """
     perfManager = content.perfManager
     metricId = vim.PerformanceManager.MetricId(counterId=counterId, instance=instance)
     startTime = datetime.now() - timedelta(seconds=60)
     endTime = datetime.now() - timedelta(seconds=40)
-    query = vim.PerformanceManager.QuerySpec(intervalId=20, entity=vm, metricId=[metricId], startTime=startTime,
+    query = vim.PerformanceManager.QuerySpec(intervalId=20, entity=vm_moref, metricId=[metricId], startTime=startTime,
                                              endTime=endTime)
     perfResults = perfManager.QueryPerf(querySpec=[query])
     if perfResults:
@@ -59,12 +69,22 @@ def build_query(content, counterId, instance, vm):
 
 
 def vm_status(vm_moref):
+    """
+    Obtains the overall status from the Virtual Machine
+
+    :param vm_moref: Managed Object Reference for the Virtual Machine
+    """
     finalOutput = str(vm_moref.overallStatus)
     extraOutput = '(State: ' + vm_moref.summary.runtime.powerState + ')'
     print_output_string(finalOutput, 'Virtual Machine Status', 'yellow', 'red', 'gray', extraOutput)
 
 
 def vm_core(vm_moref):
+    """
+    Obtains the core information for Virtual Machine (Notes, Guest, vCPU, Memory)
+
+    :param vm_moref: Managed Object Reference for the Virtual Machine
+    """
     vmconfig = vm_moref.summary.config
     if (float(vmconfig.memorySizeMB) / 1024).is_integer():
         vm_memory = str(vmconfig.memorySizeMB / 1024) + ' GB'
@@ -77,6 +97,11 @@ def vm_core(vm_moref):
 
 
 def host_core(host_moref):
+    """
+    Obtains the core information for ESXi Host (Hardware pCPU info, Memory)
+
+    :param host_moref: Managed Object Reference for the ESXi Host
+    """
     hosthardware = host_moref.summary.hardware
     print "{}, {} x {} CPU(s) ({} Cores, {} Logical), {:.0f} GB Memory".format(hosthardware.model,
                                                                                hosthardware.numCpuPkgs,
@@ -88,26 +113,58 @@ def host_core(host_moref):
 
 
 def cl_status(cl_moref):
+    """
+    Obtains the overall status for the vSphere Cluster
+
+    :param cl_moref: Managed Object Reference for the vSphere Cluster
+    """
     final_output = str(cl_moref.overallStatus)
     print_output_string(final_output, 'Cluster Status', 'yellow', 'red', 'gray')
 
 
 def vm_cpu_ready(vm_moref, content, perf_dict, warning, critical):
-    counter_key = StatCheck(perf_dict, 'cpu.ready.summation')
+    """
+    Obtains the CPU Ready value for the Virtual Machine
+
+    :param vm_moref: Managed Object Reference for the Virtual Machine
+    :param content: ServiceInstance Managed Object
+    :param perf_dict: The array containing the performance dictionary (with counters and IDs)
+    :param warning: The value to use for the print_output function to calculate whether CPU Ready is warning
+    :param critical: The value to use for the print_output function to calculate whether CPU Ready is critical
+    """
+    counter_key = stat_lookup(perf_dict, 'cpu.ready.summation')
     statdata = build_query(content, counter_key, "", vm_moref)
     final_output = (statdata / 20000 * 100)
     print_output_float(final_output, 'CPU Ready', warning, critical, '%')
 
 
 def vm_cpu_usage(vm_moref, content, perf_dict, warning, critical):
-    counter_key = StatCheck(perf_dict, 'cpu.usage.average')
+    """
+    Obtains the CPU Usage value for the Virtual Machine
+
+    :param vm_moref: Managed Object Reference for the Virtual Machine
+    :param content: ServiceInstance Managed Object
+    :param perf_dict: The array containing the performance dictionary (with counters and IDs)
+    :param warning: The value to use for the print_output function to calculate whether CPU Usage is warning
+    :param critical: The value to use for the print_output function to calculate whether CPU Usage is critical
+    """
+    counter_key = stat_lookup(perf_dict, 'cpu.usage.average')
     statdata = build_query(content, counter_key, "", vm_moref)
     final_output = (statdata / 100)
     print_output_float(final_output, 'CPU Usage', warning, critical, '%')
 
 
 def vm_mem_active(vm_moref, content, perf_dict, warning, critical):
-    counter_key = StatCheck(perf_dict, 'mem.active.average')
+    """
+    Obtains the Active Memory value for the Virtual Machine
+
+    :param vm_moref: Managed Object Reference for the Virtual Machine
+    :param content: ServiceInstance Managed Object
+    :param perf_dict: The array containing the performance dictionary (with counters and IDs)
+    :param warning: The value to use for the print_output function to calculate whether Active Memory is warning
+    :param critical: The value to use for the print_output function to calculate whether Active Memory is critical
+    """
+    counter_key = stat_lookup(perf_dict, 'mem.active.average')
     statdata = build_query(content, counter_key, "", vm_moref)
     final_output = (statdata / 1024)
     print_output_float(final_output, 'Memory Active', (warning * vm_moref.summary.config.memorySizeMB / 100),
@@ -115,7 +172,16 @@ def vm_mem_active(vm_moref, content, perf_dict, warning, critical):
 
 
 def vm_mem_shared(vm_moref, content, perf_dict, warning, critical):
-    counter_key = StatCheck(perf_dict, 'mem.shared.average')
+    """
+    Obtains the Shared Memory value for the Virtual Machine
+
+    :param vm_moref: Managed Object Reference for the Virtual Machine
+    :param content: ServiceInstance Managed Object
+    :param perf_dict: The array containing the performance dictionary (with counters and IDs)
+    :param warning: The value to use for the print_output function to calculate whether Shared Memory is warning
+    :param critical: The value to use for the print_output function to calculate whether Shared Memory is critical
+    """
+    counter_key = stat_lookup(perf_dict, 'mem.shared.average')
     statdata = build_query(content, counter_key, "", vm_moref)
     final_output = (statdata / 1024)
     print_output_float(final_output, 'Memory Shared', (warning * vm_moref.summary.config.memorySizeMB / 100),
@@ -123,7 +189,16 @@ def vm_mem_shared(vm_moref, content, perf_dict, warning, critical):
 
 
 def vm_mem_balloon(vm_moref, content, perf_dict, warning, critical):
-    counter_key = StatCheck(perf_dict, 'mem.vmmemctl.average')
+    """
+    Obtains the Ballooned Memory value for the Virtual Machine
+
+    :param vm_moref: Managed Object Reference for the Virtual Machine
+    :param content: ServiceInstance Managed Object
+    :param perf_dict: The array containing the performance dictionary (with counters and IDs)
+    :param warning: The value to use for the print_output function to calculate whether Ballooned Memory is warning
+    :param critical: The value to use for the print_output function to calculate whether Ballooned Memory is critical
+    """
+    counter_key = stat_lookup(perf_dict, 'mem.vmmemctl.average')
     statdata = build_query(content, counter_key, "", vm_moref)
     final_output = (statdata / 1024)
     print_output_float(final_output, 'Memory Balloon', (warning * vm_moref.summary.config.memorySizeMB / 100),
@@ -131,8 +206,18 @@ def vm_mem_balloon(vm_moref, content, perf_dict, warning, critical):
 
 
 def vm_ds_io(vm_moref, content, perf_dict, warning, critical):
-    counter_key_read = StatCheck(perf_dict, 'datastore.numberReadAveraged.average')
-    counter_key_write = StatCheck(perf_dict, 'datastore.numberWriteAveraged.average')
+    """
+    Obtains the Read, Write and Total Virtual Machine Datastore IOPS values.
+    Uses the Total IOPS value to calculate status.
+
+    :param vm_moref: Managed Object Reference for the Virtual Machine
+    :param content: ServiceInstance Managed Object
+    :param perf_dict: The array containing the performance dictionary (with counters and IDs)
+    :param warning: The value to use for the print_output function to calculate whether IOPS are warning
+    :param critical: The value to use for the print_output function to calculate whether IOPS are critical
+    """
+    counter_key_read = stat_lookup(perf_dict, 'datastore.numberReadAveraged.average')
+    counter_key_write = stat_lookup(perf_dict, 'datastore.numberWriteAveraged.average')
     statdata_read = build_query(content, counter_key_read, "*", vm_moref)
     statdata_write = build_query(content, counter_key_write, "*", vm_moref)
     statdata_total = statdata_read + statdata_write
@@ -140,8 +225,18 @@ def vm_ds_io(vm_moref, content, perf_dict, warning, critical):
 
 
 def vm_ds_latency(vm_moref, content, perf_dict, warning, critical):
-    counter_key_read = StatCheck(perf_dict, 'datastore.totalReadLatency.average')
-    counter_key_write = StatCheck(perf_dict, 'datastore.totalWriteLatency.average')
+    """
+    Obtains the Read, Write and Total Virtual Machine Datastore Latency values.
+    Uses the Total IOPS value to calculate status.
+
+    :param vm_moref: Managed Object Reference for the Virtual Machine
+    :param content: ServiceInstance Managed Object
+    :param perf_dict: The array containing the performance dictionary (with counters and IDs)
+    :param warning: The value to use for the print_output function to calculate whether Latency is warning
+    :param critical: The value to use for the print_output function to calculate whether Latency is critical
+    """
+    counter_key_read = stat_lookup(perf_dict, 'datastore.totalReadLatency.average')
+    counter_key_write = stat_lookup(perf_dict, 'datastore.totalWriteLatency.average')
     statdata_read = build_query(content, counter_key_read, "*", vm_moref)
     statdata_write = build_query(content, counter_key_write, "*", vm_moref)
     statdata_total = statdata_read + statdata_write
@@ -149,8 +244,18 @@ def vm_ds_latency(vm_moref, content, perf_dict, warning, critical):
 
 
 def vm_net_usage(vm_moref, content, perf_dict, warning, critical):
-    counter_key_read = StatCheck(perf_dict, 'net.received.average')
-    counter_key_write = StatCheck(perf_dict, 'net.transmitted.average')
+    """
+    Obtains the Tx and Rx Virtual Machine Network Usage values.
+    Uses the Total Network Usage value to calculate status.
+
+    :param vm_moref: Managed Object Reference for the Virtual Machine
+    :param content: ServiceInstance Managed Object
+    :param perf_dict: The array containing the performance dictionary (with counters and IDs)
+    :param warning: The value to use for the print_output function to calculate whether Network Usage is warning
+    :param critical: The value to use for the print_output function to calculate whether Network Usage is critical
+    """
+    counter_key_read = stat_lookup(perf_dict, 'net.received.average')
+    counter_key_write = stat_lookup(perf_dict, 'net.transmitted.average')
     statdata_rx = build_query(content, counter_key_read, "", vm_moref)
     statdata_tx = build_query(content, counter_key_write, "", vm_moref)
     statdata_total = (statdata_rx + statdata_tx) * 8 / 1024
@@ -158,6 +263,12 @@ def vm_net_usage(vm_moref, content, perf_dict, warning, critical):
 
 
 def ds_space(ds_moref, warning, critical):
+    """
+    Obtains the Datastore space information
+    :param ds_moref: Managed Object Reference for the Datastore
+    :param warning: The value to use for the print_output function to calculate whether Datastore space is warning
+    :param critical: The value to use for the print_output function to calculate whether Datastore space is critical
+    """
     datastore_capacity = float(ds_moref.summary.capacity / 1024 / 1024 / 1024)
     datastore_free = float(ds_moref.summary.freeSpace / 1024 / 1024 / 1024)
     datastore_used_pct = ((1 - (datastore_free / datastore_capacity)) * 100)
@@ -167,18 +278,28 @@ def ds_space(ds_moref, warning, critical):
 
 
 def ds_status(ds_moref):
+    """
+    Obtains the overall status for the Datastore
+
+    :param ds_moref: Managed Object Reference for the Datastore
+    """
     final_output = str(ds_moref.overallStatus)
     extraOutput = '(Type: ' + ds_moref.summary.type + ')'
     print_output_string(final_output, 'Datastore Status', 'yellow', 'red', 'gray', extraOutput)
 
 
-def StatCheck(perf_dict, counter_name):
+def stat_lookup(perf_dict, counter_name):
+    """
+    Performance the lookup of the supplied counter name against the dictionary and returns a counter Id
+
+    :param perf_dict: The array containing the performance dictionary (with counters and IDs)
+    :param counter_name: The counter name in the correct format for the dictionary
+    """
     counter_key = perf_dict[counter_name]
     return counter_key
 
 
-def GetProperties(content, viewType, props, specType):
-    # Build a view and get basic properties for all Virtual Machines
+def get_properties(content, viewType, props, specType):
     """
     Obtains a list of specific properties for a particular Managed Object Reference data object.
 
@@ -217,6 +338,17 @@ def GetProperties(content, viewType, props, specType):
 
 
 def print_output_float(finalOutput, statName, warnValue, critValue, suffix, extraOutput=''):
+    """
+    Prints the formatted output for Icinga based on supplied warning and critical values.
+    Used for functions where a float is supplied for comparison.
+
+    :param finalOutput: The final calculated performance value for the counter
+    :param statName: The friendly name for the performance statistic
+    :param warnValue: The value used to calculate the warning threshold for status change
+    :param critValue: The value used to calculate the critical threshold for status change
+    :param suffix: The performance value suffix (e.g. MB, GB, %)
+    :param extraOutput: Any additional output that is displayed after the core performance information
+    """
     if finalOutput >= critValue:
         print "{} - {} is {:.1f} {} {}".format(state_tuple[STATE_CRITICAL], statName, finalOutput, suffix, extraOutput)
         exit(STATE_CRITICAL)
@@ -229,6 +361,17 @@ def print_output_float(finalOutput, statName, warnValue, critValue, suffix, extr
 
 
 def print_output_string(finalOutput, statName, warnValue, critValue, unkValue, extraOutput=''):
+    """
+    Prints the formatted output for Icinga based on supplied warning and critical values.
+    Used for functions where a text string is supplied for comparison.
+
+    :param finalOutput: The final calculated performance value for the counter
+    :param statName: The friendly name for the performance statistic
+    :param warnValue: The text string used to calculate the warning threshold for status change
+    :param critValue: The text string used to calculate the critical threshold for status change
+    :param unkValue: The text string used to calculate the unknown threshold for status change
+    :param extraOutput: Any additional output that is displayed after the core performance information
+    """
     if finalOutput == critValue:
         print "{} - {} is {} {}".format(state_tuple[STATE_CRITICAL], statName, finalOutput, extraOutput)
         exit(STATE_CRITICAL)
@@ -243,7 +386,30 @@ def print_output_string(finalOutput, statName, warnValue, critValue, unkValue, e
         exit(STATE_OK)
 
 
+def create_perf_dictionary(content):
+    """
+    Checks whether the connection is to an ESXi host or vCenter and calls the write_perf_dictionary
+    function with the relevant file name.
+
+    :param content: ServiceInstance Managed Object
+    """
+    if content.about.name == 'VMware vCenter Server':
+        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
+    elif content.about.name == 'VMware ESXi':
+        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
+    return perf_dict
+
+
 def write_perf_dictionary(content, file_perf_dic):
+    """
+    Checks whether the performance dictionary is older that 7 days.  If it is it creates a new one.
+    This dictionary is read into the array and used in the functions that require perf_dict.
+    NOTE: This is faster than doing a lookup live with a ServiceInstance Managed Object for every performance query.
+
+    :param content: ServiceInstance Managed Object
+    :param file_perf_dic: file name supplied by calling function (based on ESXi or vCenter connection)
+    :return:
+    """
     if not path.exists(file_perf_dic) or datetime.fromtimestamp(path.getmtime(file_perf_dic)) < (datetime.now() - timedelta(days=7)):
         # Get all the vCenter performance counters
         perf_dict = {}
@@ -260,14 +426,6 @@ def write_perf_dictionary(content, file_perf_dic):
         for line in f:
             perf_dict[line.split(',')[0]] = int(line.split(',')[1])
         f.close()
-    return perf_dict
-
-
-def create_perf_dictionary(content):
-    if content.about.name == 'VMware vCenter Server':
-        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
-    elif content.about.name == 'VMware ESXi':
-        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
     return perf_dict
 
 
@@ -301,7 +459,7 @@ def main():
 
         if args.type == 'vm':
             #Find VM supplied as arg and use Managed Object Reference (moref) for the PrintVmInfo
-            vmProps = GetProperties(content, [vim.VirtualMachine], ['name', 'runtime.powerState'], vim.VirtualMachine)
+            vmProps = get_properties(content, [vim.VirtualMachine], ['name', 'runtime.powerState'], vim.VirtualMachine)
             for vm in vmProps:
                 if (vm['name'] == entity) and (vm['runtime.powerState'] == "poweredOn"):
                     vm_moref = vm['moref']
@@ -339,8 +497,8 @@ def main():
                         exit(STATE_UNKNOWN)
 
         elif args.type == 'host':
-            dsProps = GetProperties(content, [vim.HostSystem], ['name'], vim.HostSystem)
-            for host in dsProps:
+            hostProps = get_properties(content, [vim.HostSystem], ['name'], vim.HostSystem)
+            for host in hostProps:
                 if host['name'] == entity:
                     host_moref = host['moref']
                     if args.counter == 'core':
@@ -350,7 +508,7 @@ def main():
                         exit(STATE_UNKNOWN)
 
         elif args.type == 'datastore':
-            dsProps = GetProperties(content, [vim.Datastore], ['name'], vim.Datastore)
+            dsProps = get_properties(content, [vim.Datastore], ['name'], vim.Datastore)
             for datastore in dsProps:
                 if datastore['name'] == entity:
                     ds_moref = datastore['moref']
@@ -363,7 +521,7 @@ def main():
                         exit(STATE_UNKNOWN)
 
         elif args.type == 'cluster':
-            clProps = GetProperties(content, [vim.ClusterComputeResource], ['name'], vim.ClusterComputeResource)
+            clProps = get_properties(content, [vim.ClusterComputeResource], ['name'], vim.ClusterComputeResource)
             for cluster in clProps:
                 if cluster['name'] == entity:
                     cl_moref = cluster['moref']
