@@ -200,7 +200,7 @@ def create_esxi_host(entity):
     f.write('#Host ' + norm_entity + '\n')
     f.write('define host {\n')
     f.write('\tuse\t\t\tgeneric-host\n')
-    f.write('\thost_name\t\t' + norm_entity + '\n')
+    f.write('\thost_name\t\t' + entity + '\n')
     f.write('\talias\t\t\t' + norm_entity + '\n')
     f.write('\taddress\t\t\t' + entity + '\n')
     f.write('\t}\n\n')
@@ -405,6 +405,8 @@ def create_vc_host(dc, entity, host_name, hostgroup_name, host_type, warning, cr
     f.write('\tuse\t\t\tgeneric-host\n')
     if host_type == 'cluster':
         f.write('\thost_name\t\t' + cl_name + '\n')
+    if host_type == 'host':
+        f.write('\thost_name\t\t' + host_name + '\n')
     else:
         f.write('\thost_name\t\t' + norm_host + '\n')
     f.write('\talias\t\t\t' + norm_host + ' ' + host_type + '\n')
