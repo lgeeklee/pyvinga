@@ -341,7 +341,7 @@ def create_vcenter_config(entity, vm_props, dc_list, dc_sahost_list, dc_cl_list,
         # Create Virtual Machine host objects
         host_type = 'vm'
         if vm['clustername'] == False:
-            vm_parent = str(vm['hostname']).split('.')[0]
+            vm_parent = vm['hostname']
         else:
             vm_parent = vm['clustername']
         create_vc_host(vm['dcname'], entity, vm['name'], vm['hostgroup_name'], host_type, 0, 0, vm_parent)
