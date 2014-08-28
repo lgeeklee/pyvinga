@@ -64,7 +64,7 @@ def build_query(content, counterId, instance, vm_moref):
         statdata = float(sum(perfResults[0].value[0].value))
         return statdata
     else:
-        print 'ERROR: Performance results empty'
+        print 'ERROR: Performance results empty.  Check time drift on source and vCenter server'
         exit(STATE_WARNING)
 
 
@@ -350,13 +350,19 @@ def print_output_float(finalOutput, statName, warnValue, critValue, suffix, extr
     :param extraOutput: Any additional output that is displayed after the core performance information
     """
     if finalOutput >= critValue:
-        print "{} - {} is {:.1f} {} {}".format(state_tuple[STATE_CRITICAL], statName, finalOutput, suffix, extraOutput)
+        print "{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}".format(state_tuple[STATE_CRITICAL], statName,
+                                                                              finalOutput, suffix, extraOutput,
+                                                                              warnValue, critValue)
         exit(STATE_CRITICAL)
     elif finalOutput >= warnValue:
-        print "{} - {} is {:.1f} {} {}".format(state_tuple[STATE_WARNING], statName, finalOutput, suffix, extraOutput)
+        print "{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}".format(state_tuple[STATE_WARNING], statName,
+                                                                              finalOutput, suffix, extraOutput,
+                                                                              warnValue, critValue)
         exit(STATE_WARNING)
     else:
-        print "{} - {} is {:.1f} {} {}".format(state_tuple[STATE_OK], statName, finalOutput, suffix, extraOutput)
+        print "{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}".format(state_tuple[STATE_OK], statName,
+                                                                              finalOutput, suffix, extraOutput,
+                                                                              warnValue, critValue)
         exit(STATE_OK)
 
 
@@ -394,9 +400,9 @@ def create_perf_dictionary(content):
     :param content: ServiceInstance Managed Object
     """
     if content.about.name == 'VMware vCenter Server':
-        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C:\\Temp\\vcenter_perfdic.txt')
     elif content.about.name == 'VMware ESXi':
-        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C:\\Temp\\host_perfdic.txt')
     return perf_dict
 
 
@@ -434,8 +440,8 @@ def main():
     try:
         entity = args.entity
         if args.counter != 'core' and args.counter != 'status':
-            warning = int(args.warning)
-            critical = int(args.critical)
+            warning = float(args.warning)
+            critical = float(args.critical)
         si = None
         if args.password:
             password = args.password
