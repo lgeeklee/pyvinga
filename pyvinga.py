@@ -168,7 +168,7 @@ def vm_mem_active(vm_moref, content, perf_dict, warning, critical):
     statdata = build_query(content, counter_key, "", vm_moref)
     final_output = (statdata / 1024)
     print_output_float(final_output, 'Memory Active', (warning * vm_moref.summary.config.memorySizeMB / 100),
-                     (critical * vm_moref.summary.config.memorySizeMB / 100), 'MB')
+                      (critical * vm_moref.summary.config.memorySizeMB / 100), 'MB', '', 0, vm_moref.summary.config.memorySizeMB)
 
 
 def vm_mem_shared(vm_moref, content, perf_dict, warning, critical):
@@ -185,7 +185,7 @@ def vm_mem_shared(vm_moref, content, perf_dict, warning, critical):
     statdata = build_query(content, counter_key, "", vm_moref)
     final_output = (statdata / 1024)
     print_output_float(final_output, 'Memory Shared', (warning * vm_moref.summary.config.memorySizeMB / 100),
-                     (critical * vm_moref.summary.config.memorySizeMB / 100), 'MB')
+                      (critical * vm_moref.summary.config.memorySizeMB / 100), 'MB', '', 0, vm_moref.summary.config.memorySizeMB)
 
 
 def vm_mem_balloon(vm_moref, content, perf_dict, warning, critical):
@@ -202,7 +202,7 @@ def vm_mem_balloon(vm_moref, content, perf_dict, warning, critical):
     statdata = build_query(content, counter_key, "", vm_moref)
     final_output = (statdata / 1024)
     print_output_float(final_output, 'Memory Balloon', (warning * vm_moref.summary.config.memorySizeMB / 100),
-                     (critical * vm_moref.summary.config.memorySizeMB / 100), 'MB')
+                      (critical * vm_moref.summary.config.memorySizeMB / 100), 'MB', '', 0, vm_moref.summary.config.memorySizeMB)
 
 
 def vm_ds_io(vm_moref, content, perf_dict, warning, critical):
@@ -221,7 +221,7 @@ def vm_ds_io(vm_moref, content, perf_dict, warning, critical):
     statdata_read = build_query(content, counter_key_read, "*", vm_moref)
     statdata_write = build_query(content, counter_key_write, "*", vm_moref)
     statdata_total = statdata_read + statdata_write
-    print_output_float(statdata_total, 'Datastore IOPS', warning, critical, 'IOPS')
+    print_output_float(statdata_total, 'Datastore IOPS', warning, critical, 'IOPS', '', 0, 5000)
 
 
 def vm_ds_latency(vm_moref, content, perf_dict, warning, critical):
@@ -240,7 +240,7 @@ def vm_ds_latency(vm_moref, content, perf_dict, warning, critical):
     statdata_read = build_query(content, counter_key_read, "*", vm_moref)
     statdata_write = build_query(content, counter_key_write, "*", vm_moref)
     statdata_total = statdata_read + statdata_write
-    print_output_float(statdata_total, 'Datastore Latency', warning, critical, 'ms')
+    print_output_float(statdata_total, 'Datastore Latency', warning, critical, 'ms', '', 0, 100)
 
 
 def vm_net_usage(vm_moref, content, perf_dict, warning, critical):
@@ -259,7 +259,7 @@ def vm_net_usage(vm_moref, content, perf_dict, warning, critical):
     statdata_rx = build_query(content, counter_key_read, "", vm_moref)
     statdata_tx = build_query(content, counter_key_write, "", vm_moref)
     statdata_total = (statdata_rx + statdata_tx) * 8 / 1024
-    print_output_float(statdata_total, 'Network Usage', warning, critical, 'Mbps')
+    print_output_float(statdata_total, 'Network Usage', warning, critical, 'Mbps', '', 0, 1000)
 
 
 def ds_space(ds_moref, warning, critical):
@@ -337,7 +337,7 @@ def get_properties(content, viewType, props, specType):
     return gpOutput
 
 
-def print_output_float(finalOutput, statName, warnValue, critValue, suffix, extraOutput=''):
+def print_output_float(finalOutput, statName, warnValue, critValue, suffix, extraOutput='', min_value=0, max_value=100):
     """
     Prints the formatted output for Icinga based on supplied warning and critical values.
     Used for functions where a float is supplied for comparison.
@@ -352,17 +352,17 @@ def print_output_float(finalOutput, statName, warnValue, critValue, suffix, extr
     if finalOutput >= critValue:
         print "{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}".format(state_tuple[STATE_CRITICAL], statName,
                                                                               finalOutput, suffix, extraOutput,
-                                                                              warnValue, critValue)
+                                                                              warnValue, critValue, min_value, max_value)
         exit(STATE_CRITICAL)
     elif finalOutput >= warnValue:
         print "{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}".format(state_tuple[STATE_WARNING], statName,
                                                                               finalOutput, suffix, extraOutput,
-                                                                              warnValue, critValue)
+                                                                              warnValue, critValue, min_value, max_value)
         exit(STATE_WARNING)
     else:
-        print "{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}".format(state_tuple[STATE_OK], statName,
+        print "{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6};{7};{8}".format(state_tuple[STATE_OK], statName,
                                                                               finalOutput, suffix, extraOutput,
-                                                                              warnValue, critValue)
+                                                                              warnValue, critValue, min_value, max_value)
         exit(STATE_OK)
 
 
@@ -400,9 +400,9 @@ def create_perf_dictionary(content):
     :param content: ServiceInstance Managed Object
     """
     if content.about.name == 'VMware vCenter Server':
-        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C:\\Temp\\vcenter_perfdic.txt')
     elif content.about.name == 'VMware ESXi':
-        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C:\\Temp\\host_perfdic.txt')
     return perf_dict
 
 
