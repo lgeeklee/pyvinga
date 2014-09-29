@@ -16,8 +16,3 @@ releases:
         url: "file:///pyvinga.py"
         description: "First release"
         checksum: 244a74ce00be1d35b3acbb8bc079712f
-
-        name: vi_setup.py
-        url: "file:///icinga1-setup//vi_setup.py"
-        description: "Scripted deployment for Icinga 1"
-        checksum: ec51149bb3c53b5bcf62a0e873520e6c
