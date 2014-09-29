@@ -17,5 +17,5 @@ releases:
         checksum: 244a74ce00be1d35b3acbb8bc079712f
       - name: vi-setup.py
         url: "file:///icinga1-setup/vi-setup.py"
-        description: "First release"
+        description: "Scripted setup for Icinga 1"
         checksum: ec51149bb3c53b5bcf62a0e873520e6c
