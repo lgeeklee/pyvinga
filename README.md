@@ -2,7 +2,7 @@ pyvinga
 =======
 
 This plug-in allows you to monitor your vSphere environment from Icinga. It allows you to connect to individual
-ESXi hosts or centralised vCenter servers. It uses the Python pyVmomi plugin for connecting to vSphere.
+ESXi hosts or centralised vCenter servers and uses the Python pyVmomi plugin for this connection.
 
 <img src="http://geeklee.co.uk/github/pyvinga1b.png" alt="Example output">
 
