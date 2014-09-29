@@ -1,7 +1,7 @@
 name: pyvinga
 description: "file:///README.md"
 url: "https://github.com/lgeeklee/pyvinga"
-tags: Statistic,vSphere,ESXi
+tags: Statistic,vSphere,ESXi,Virtual Machine
 vendor: VMware
 target: Operating System
 type: Plugin
