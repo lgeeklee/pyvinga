@@ -1,0 +1,21 @@
+name: pyvinga
+description: "file:///README.md"
+url: "https://github.com/lgeeklee/pyvinga"
+tags: Statistic vSphere ESXi
+vendor: VMware
+target: Operating System
+type: Plugin
+license: mit
+releases:
+  -
+    name: 1.0
+    description: "1.0 Release"
+    files:
+      -
+        name: pyvinga.py
+        url: "file:///pyvinga.py"
+        description: "First release"
+
+        name: vi_setup.py
+        url: "file:///icinga1-setup//vi_setup.py"
+        description: "Scripted deployment for Icinga 1"
