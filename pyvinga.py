@@ -14,6 +14,7 @@ from os import path
 import argparse
 import atexit
 import getpass
+import sys
 
 
 # Define specific values for the Icinga return status and also create a list
@@ -447,6 +448,10 @@ def main():
             password = args.password
         else:
             password = getpass.getpass(prompt="Enter password for host {} and user {}: ".format(args.host, args.user))
+        # Set stderr to log to a file instead of the screen
+        f = open("/tmp/pyVmomiSmartConnect.log", "w")
+        original_stderr = sys.stderr
+        sys.stderr = f
         try:
             si = SmartConnect(host=args.host,
                               user=args.user,
@@ -454,6 +459,10 @@ def main():
                               port=int(args.port))
         except IOError as e:
             pass
+        finally:
+            sys.stderr = original_stderr
+            f.close()
+
         if not si:
             print('Could not connect to the specified host using specified username and password')
             return -1
