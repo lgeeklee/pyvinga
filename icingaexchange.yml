@@ -8,8 +8,8 @@ type: Plugin
 license: mit
 releases:
   -
-    name: 1.1
-    description: "1.1 Release"
+    name: 1.2
+    description: "1.2 Release"
     files:
       - name: pyvinga.py
         url: "file:///pyvinga.py"

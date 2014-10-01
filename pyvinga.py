@@ -448,8 +448,10 @@ def main():
             password = args.password
         else:
             password = getpass.getpass(prompt="Enter password for host {} and user {}: ".format(args.host, args.user))
-        # Set stderr to log to a file instead of the screen
-        f = open("/tmp/pyVmomiSmartConnect.log", "w")
+
+        # Set stderr to log /dev/null instead of the screen to prevent warnings contaminating output
+        # NOTE: This is only in place until a more suitable method to deal with the latest certificate warnings
+        f = open('/dev/null', "w")
         original_stderr = sys.stderr
         sys.stderr = f
         try:
@@ -461,7 +463,6 @@ def main():
             pass
         finally:
             sys.stderr = original_stderr
-            f.close()
 
         if not si:
             print('Could not connect to the specified host using specified username and password')
