@@ -8,12 +8,12 @@ type: Plugin
 license: mit
 releases:
   -
-    name: 1.0
-    description: "1.0 Release"
+    name: 1.1
+    description: "1.1 Release"
     files:
       - name: pyvinga.py
         url: "file:///pyvinga.py"
-        description: "First release"
+        description: "Monitor vSphere"
         checksum: 244a74ce00be1d35b3acbb8bc079712f
       - name: vi-setup.py
         url: "file:///icinga1-setup/vi-setup.py"
