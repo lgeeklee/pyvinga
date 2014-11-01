@@ -44,7 +44,7 @@ def GetArgs():
     return args
 
 
-def build_query(content, counterId, instance, vm_moref):
+def build_query(content, vchtime, counterId, instance, vm_moref):
     """
     Creates the query for performance stats in the correct format
 
@@ -56,8 +56,8 @@ def build_query(content, counterId, instance, vm_moref):
     """
     perfManager = content.perfManager
     metricId = vim.PerformanceManager.MetricId(counterId=counterId, instance=instance)
-    startTime = datetime.now() - timedelta(seconds=60)
-    endTime = datetime.now() - timedelta(seconds=40)
+    startTime = vchtime - timedelta(seconds=60)
+    endTime = vchtime - timedelta(seconds=40)
     query = vim.PerformanceManager.QuerySpec(intervalId=20, entity=vm_moref, metricId=[metricId], startTime=startTime,
                                              endTime=endTime)
     perfResults = perfManager.QueryPerf(querySpec=[query])
@@ -123,7 +123,7 @@ def cl_status(cl_moref):
     print_output_string(final_output, 'Cluster Status', 'yellow', 'red', 'gray')
 
 
-def vm_cpu_ready(vm_moref, content, perf_dict, warning, critical):
+def vm_cpu_ready(vm_moref, content, vchtime, perf_dict, warning, critical):
     """
     Obtains the CPU Ready value for the Virtual Machine
 
@@ -134,12 +134,12 @@ def vm_cpu_ready(vm_moref, content, perf_dict, warning, critical):
     :param critical: The value to use for the print_output function to calculate whether CPU Ready is critical
     """
     counter_key = stat_lookup(perf_dict, 'cpu.ready.summation')
-    statdata = build_query(content, counter_key, "", vm_moref)
+    statdata = build_query(content, vchtime, counter_key, "", vm_moref)
     final_output = (statdata / 20000 * 100)
     print_output_float(final_output, 'CPU Ready', warning, critical, '%')
 
 
-def vm_cpu_usage(vm_moref, content, perf_dict, warning, critical):
+def vm_cpu_usage(vm_moref, content, vchtime, perf_dict, warning, critical):
     """
     Obtains the CPU Usage value for the Virtual Machine
 
@@ -150,12 +150,12 @@ def vm_cpu_usage(vm_moref, content, perf_dict, warning, critical):
     :param critical: The value to use for the print_output function to calculate whether CPU Usage is critical
     """
     counter_key = stat_lookup(perf_dict, 'cpu.usage.average')
-    statdata = build_query(content, counter_key, "", vm_moref)
+    statdata = build_query(content, vchtime, counter_key, "", vm_moref)
     final_output = (statdata / 100)
     print_output_float(final_output, 'CPU Usage', warning, critical, '%')
 
 
-def vm_mem_active(vm_moref, content, perf_dict, warning, critical):
+def vm_mem_active(vm_moref, content, vchtime, perf_dict, warning, critical):
     """
     Obtains the Active Memory value for the Virtual Machine
 
@@ -166,13 +166,13 @@ def vm_mem_active(vm_moref, content, perf_dict, warning, critical):
     :param critical: The value to use for the print_output function to calculate whether Active Memory is critical
     """
     counter_key = stat_lookup(perf_dict, 'mem.active.average')
-    statdata = build_query(content, counter_key, "", vm_moref)
+    statdata = build_query(content, vchtime, counter_key, "", vm_moref)
     final_output = (statdata / 1024)
     print_output_float(final_output, 'Memory Active', (warning * vm_moref.summary.config.memorySizeMB / 100),
                       (critical * vm_moref.summary.config.memorySizeMB / 100), 'MB', '', 0, vm_moref.summary.config.memorySizeMB)
 
 
-def vm_mem_shared(vm_moref, content, perf_dict, warning, critical):
+def vm_mem_shared(vm_moref, content, vchtime, perf_dict, warning, critical):
     """
     Obtains the Shared Memory value for the Virtual Machine
 
@@ -183,13 +183,13 @@ def vm_mem_shared(vm_moref, content, perf_dict, warning, critical):
     :param critical: The value to use for the print_output function to calculate whether Shared Memory is critical
     """
     counter_key = stat_lookup(perf_dict, 'mem.shared.average')
-    statdata = build_query(content, counter_key, "", vm_moref)
+    statdata = build_query(content, vchtime, counter_key, "", vm_moref)
     final_output = (statdata / 1024)
     print_output_float(final_output, 'Memory Shared', (warning * vm_moref.summary.config.memorySizeMB / 100),
                       (critical * vm_moref.summary.config.memorySizeMB / 100), 'MB', '', 0, vm_moref.summary.config.memorySizeMB)
 
 
-def vm_mem_balloon(vm_moref, content, perf_dict, warning, critical):
+def vm_mem_balloon(vm_moref, content, vchtime, perf_dict, warning, critical):
     """
     Obtains the Ballooned Memory value for the Virtual Machine
 
@@ -200,13 +200,13 @@ def vm_mem_balloon(vm_moref, content, perf_dict, warning, critical):
     :param critical: The value to use for the print_output function to calculate whether Ballooned Memory is critical
     """
     counter_key = stat_lookup(perf_dict, 'mem.vmmemctl.average')
-    statdata = build_query(content, counter_key, "", vm_moref)
+    statdata = build_query(content, vchtime, counter_key, "", vm_moref)
     final_output = (statdata / 1024)
     print_output_float(final_output, 'Memory Balloon', (warning * vm_moref.summary.config.memorySizeMB / 100),
                       (critical * vm_moref.summary.config.memorySizeMB / 100), 'MB', '', 0, vm_moref.summary.config.memorySizeMB)
 
 
-def vm_ds_io(vm_moref, content, perf_dict, warning, critical):
+def vm_ds_io(vm_moref, content, vchtime, perf_dict, warning, critical):
     """
     Obtains the Read, Write and Total Virtual Machine Datastore IOPS values.
     Uses the Total IOPS value to calculate status.
@@ -219,13 +219,13 @@ def vm_ds_io(vm_moref, content, perf_dict, warning, critical):
     """
     counter_key_read = stat_lookup(perf_dict, 'datastore.numberReadAveraged.average')
     counter_key_write = stat_lookup(perf_dict, 'datastore.numberWriteAveraged.average')
-    statdata_read = build_query(content, counter_key_read, "*", vm_moref)
-    statdata_write = build_query(content, counter_key_write, "*", vm_moref)
+    statdata_read = build_query(content, vchtime, counter_key_read, "*", vm_moref)
+    statdata_write = build_query(content, vchtime, counter_key_write, "*", vm_moref)
     statdata_total = statdata_read + statdata_write
     print_output_float(statdata_total, 'Datastore IOPS', warning, critical, 'IOPS', '', 0, 5000)
 
 
-def vm_ds_latency(vm_moref, content, perf_dict, warning, critical):
+def vm_ds_latency(vm_moref, content, vchtime, perf_dict, warning, critical):
     """
     Obtains the Read, Write and Total Virtual Machine Datastore Latency values.
     Uses the Total IOPS value to calculate status.
@@ -238,13 +238,13 @@ def vm_ds_latency(vm_moref, content, perf_dict, warning, critical):
     """
     counter_key_read = stat_lookup(perf_dict, 'datastore.totalReadLatency.average')
     counter_key_write = stat_lookup(perf_dict, 'datastore.totalWriteLatency.average')
-    statdata_read = build_query(content, counter_key_read, "*", vm_moref)
-    statdata_write = build_query(content, counter_key_write, "*", vm_moref)
+    statdata_read = build_query(content, vchtime, counter_key_read, "*", vm_moref)
+    statdata_write = build_query(content, vchtime, counter_key_write, "*", vm_moref)
     statdata_total = statdata_read + statdata_write
     print_output_float(statdata_total, 'Datastore Latency', warning, critical, 'ms', '', 0, 100)
 
 
-def vm_net_usage(vm_moref, content, perf_dict, warning, critical):
+def vm_net_usage(vm_moref, content, vchtime, perf_dict, warning, critical):
     """
     Obtains the Tx and Rx Virtual Machine Network Usage values.
     Uses the Total Network Usage value to calculate status.
@@ -257,8 +257,8 @@ def vm_net_usage(vm_moref, content, perf_dict, warning, critical):
     """
     counter_key_read = stat_lookup(perf_dict, 'net.received.average')
     counter_key_write = stat_lookup(perf_dict, 'net.transmitted.average')
-    statdata_rx = build_query(content, counter_key_read, "", vm_moref)
-    statdata_tx = build_query(content, counter_key_write, "", vm_moref)
+    statdata_rx = build_query(content, vchtime, counter_key_read, "", vm_moref)
+    statdata_tx = build_query(content, vchtime, counter_key_write, "", vm_moref)
     statdata_total = (statdata_rx + statdata_tx) * 8 / 1024
     print_output_float(statdata_total, 'Network Usage', warning, critical, 'Mbps', '', 0, 1000)
 
@@ -401,9 +401,9 @@ def create_perf_dictionary(content):
     :param content: ServiceInstance Managed Object
     """
     if content.about.name == 'VMware vCenter Server':
-        perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//vcenter_perfdic.txt')
     elif content.about.name == 'VMware ESXi':
-        perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
+        perf_dict = write_perf_dictionary(content, 'C://Temp//host_perfdic.txt')
     return perf_dict
 
 
@@ -470,6 +470,8 @@ def main():
 
         atexit.register(Disconnect, si)
         content = si.RetrieveContent()
+        # Get vCenter date and time for use as baseline when querying for counters
+        vchtime = si.CurrentTime()
 
         perf_dict = create_perf_dictionary(content)
 
@@ -484,21 +486,21 @@ def main():
                     elif args.counter == 'status':
                         vm_status(vm_moref)
                     elif args.counter == 'cpu.ready':
-                        vm_cpu_ready(vm_moref, content, perf_dict, warning, critical)
+                        vm_cpu_ready(vm_moref, content, vchtime, perf_dict, warning, critical)
                     elif args.counter == 'cpu.usage':
-                        vm_cpu_usage(vm_moref, content, perf_dict, warning, critical)
+                        vm_cpu_usage(vm_moref, content, vchtime, perf_dict, warning, critical)
                     elif args.counter == 'mem.active':
-                        vm_mem_active(vm_moref, content, perf_dict, warning, critical)
+                        vm_mem_active(vm_moref, content, vchtime, perf_dict, warning, critical)
                     elif args.counter == 'mem.shared':
-                        vm_mem_shared(vm_moref, content, perf_dict, warning, critical)
+                        vm_mem_shared(vm_moref, content, vchtime, perf_dict, warning, critical)
                     elif args.counter == 'mem.balloon':
-                        vm_mem_balloon(vm_moref, content, perf_dict, warning, critical)
+                        vm_mem_balloon(vm_moref, content, vchtime, perf_dict, warning, critical)
                     elif args.counter == 'datastore.io':
-                        vm_ds_io(vm_moref, content, perf_dict, warning, critical)
+                        vm_ds_io(vm_moref, content, vchtime, perf_dict, warning, critical)
                     elif args.counter == 'datastore.latency':
-                        vm_ds_latency(vm_moref, content, perf_dict, warning, critical)
+                        vm_ds_latency(vm_moref, content, vchtime, perf_dict, warning, critical)
                     elif args.counter == 'network.usage':
-                        vm_net_usage(vm_moref, content, perf_dict, warning, critical)
+                        vm_net_usage(vm_moref, content, vchtime, perf_dict, warning, critical)
                     else:
                         print 'ERROR: No supported counter found'
                         exit(STATE_UNKNOWN)
