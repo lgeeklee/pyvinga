@@ -8,8 +8,8 @@ type: Plugin
 license: mit
 releases:
   -
-    name: 1.2
-    description: "1.2 Release"
+    name: 1.3
+    description: "1.3 Release: correct empty perf counters problem"
     files:
       - name: pyvinga.py
         url: "file:///pyvinga.py"
