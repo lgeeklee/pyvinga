@@ -113,6 +113,21 @@ def host_core(host_moref):
     exit(STATE_OK)
 
 
+def host_cpu(host_moref, warning, critical):
+    """
+    Obtains the current CPU usage of the Host
+
+    :param host_moref: Managed Object Reference for the ESXi Host
+    """
+    host_total_cpu = host_moref.summary.hardware.cpuMhz * host_moref.summary.hardware.numCpuCores
+    host_cpu = host_moref.summary.quickstats.overallCpuUsage
+
+    final_output = (host_cpu /host_total_cpu) * 100
+
+    print_output_float(final_output, 'CPU Usage', warning, critical, '%')
+
+
+
 def cl_status(cl_moref):
     """
     Obtains the overall status for the vSphere Cluster
