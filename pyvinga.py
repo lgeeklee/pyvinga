@@ -536,6 +536,8 @@ def main():
                     host_moref = host['moref']
                     if args.counter == 'core':
                         host_core(host_moref)
+                    elif args.counter == 'host.cpu':
+                        host_cpu(host_moref)
                     else:
                         print 'ERROR: No supported counter found'
                         exit(STATE_UNKNOWN)
