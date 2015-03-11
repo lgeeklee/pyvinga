@@ -5,7 +5,7 @@ Python program that will query requested counters in vCenter and return
 status information for Icinga
 """
 
-#from __future__ import print_function
+from __future__ import print_function
 from __future__ import division
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vmodl, vim
@@ -66,7 +66,7 @@ def build_query(content, vchtime, counterId, instance, vm_moref):
         statdata = float(sum(perfResults[0].value[0].value))
         return statdata
     else:
-        print 'ERROR: Performance results empty.  Check time drift on source and vCenter server'
+        print('ERROR: Performance results empty.  Check time drift on source and vCenter server')
         exit(STATE_WARNING)
 
 
@@ -92,7 +92,7 @@ def vm_core(vm_moref):
         vm_memory = str(vmconfig.memorySizeMB / 1024) + ' GB'
     else:
         vm_memory = str(vmconfig.memorySizeMB) + ' MB'
-    print "{}, {}, {} vCPU(s), {} Memory".format(vmconfig.annotation,
+    print("{}, {}, {} vCPU(s), {} Memory").format(vmconfig.annotation,
                                                         vmconfig.guestFullName, vm_moref.summary.config.numCpu,
                                                         (vm_memory))
     exit(STATE_OK)
@@ -105,7 +105,7 @@ def host_core(host_moref):
     :param host_moref: Managed Object Reference for the ESXi Host
     """
     hosthardware = host_moref.summary.hardware
-    print "{}, {} x {} CPU(s) ({} Cores, {} Logical), {:.0f} GB Memory".format(hosthardware.model,
+    print("{}, {} x {} CPU(s) ({} Cores, {} Logical), {:.0f} GB Memory").format(hosthardware.model,
                                                                                hosthardware.numCpuPkgs,
                                                                                hosthardware.cpuModel,
                                                                                hosthardware.numCpuCores,
@@ -366,17 +366,17 @@ def print_output_float(finalOutput, statName, warnValue, critValue, suffix, extr
     :param extraOutput: Any additional output that is displayed after the core performance information
     """
     if finalOutput >= critValue:
-        print "{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}".format(state_tuple[STATE_CRITICAL], statName,
+        print("{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}").format(state_tuple[STATE_CRITICAL], statName,
                                                                               finalOutput, suffix, extraOutput,
                                                                               warnValue, critValue, min_value, max_value)
         exit(STATE_CRITICAL)
     elif finalOutput >= warnValue:
-        print "{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}".format(state_tuple[STATE_WARNING], statName,
+        print("{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}").format(state_tuple[STATE_WARNING], statName,
                                                                               finalOutput, suffix, extraOutput,
                                                                               warnValue, critValue, min_value, max_value)
         exit(STATE_WARNING)
     else:
-        print "{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6};{7};{8}".format(state_tuple[STATE_OK], statName,
+        print("{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6};{7};{8}").format(state_tuple[STATE_OK], statName,
                                                                               finalOutput, suffix, extraOutput,
                                                                               warnValue, critValue, min_value, max_value)
         exit(STATE_OK)
@@ -395,16 +395,16 @@ def print_output_string(finalOutput, statName, warnValue, critValue, unkValue, e
     :param extraOutput: Any additional output that is displayed after the core performance information
     """
     if finalOutput == critValue:
-        print "{} - {} is {} {}".format(state_tuple[STATE_CRITICAL], statName, finalOutput, extraOutput)
+        print("{} - {} is {} {}").format(state_tuple[STATE_CRITICAL], statName, finalOutput, extraOutput)
         exit(STATE_CRITICAL)
     elif finalOutput == warnValue:
-        print "{} - {} is {} {}".format(state_tuple[STATE_WARNING], statName, finalOutput, extraOutput)
+        print("{} - {} is {} {}").format(state_tuple[STATE_WARNING], statName, finalOutput, extraOutput)
         exit(STATE_WARNING)
     elif finalOutput == unkValue:
-        print "{} - {} is {} {}".format(state_tuple[STATE_UNKNOWN], statName, finalOutput, extraOutput)
+        print("{} - {} is {} {}").format(state_tuple[STATE_UNKNOWN], statName, finalOutput, extraOutput)
         exit(STATE_WARNING)
     else:
-        print "{} - {} is {} {}".format(state_tuple[STATE_OK], statName, finalOutput, extraOutput)
+        print("{} - {} is {} {}").format(state_tuple[STATE_OK], statName, finalOutput, extraOutput)
         exit(STATE_OK)
 
 
@@ -517,7 +517,7 @@ def main():
                     elif args.counter == 'network.usage':
                         vm_net_usage(vm_moref, content, vchtime, perf_dict, warning, critical)
                     else:
-                        print 'ERROR: No supported counter found'
+                        print('ERROR: No supported counter found')
                         exit(STATE_UNKNOWN)
                 elif (vm['name'] == entity) and ((vm['runtime.powerState'] == "poweredOff") or (vm['runtime.powerState'] == "suspended")):
                     vm_moref = vm['moref']
@@ -526,7 +526,7 @@ def main():
                     elif args.counter == 'status':
                         vm_status(vm_moref)
                     else:
-                        print 'ERROR: Virtual Machine is powered off'
+                        print('ERROR: Virtual Machine is powered off')
                         exit(STATE_UNKNOWN)
 
         elif args.type == 'host':
@@ -539,7 +539,7 @@ def main():
                     elif args.counter == 'cpu.usage':
                         host_cpu_usage(host_moref, warning, critical)
                     else:
-                        print 'ERROR: No supported counter found'
+                        print('ERROR: No supported counter found')
                         exit(STATE_UNKNOWN)
 
         elif args.type == 'datastore':
@@ -552,7 +552,7 @@ def main():
                     elif args.counter == 'space':
                         ds_space(ds_moref, warning, critical)
                     else:
-                        print 'ERROR: No supported counter found'
+                        print('ERROR: No supported counter found')
                         exit(STATE_UNKNOWN)
 
         elif args.type == 'cluster':
@@ -563,17 +563,17 @@ def main():
                     if args.counter == 'status':
                         cl_status(cl_moref)
                     else:
-                        print 'ERROR: No supported counter found'
+                        print('ERROR: No supported counter found')
                         exit(STATE_UNKNOWN)
 
         else:
-            print 'ERROR: No supported Entity type provided'
+            print('ERROR: No supported Entity type provided')
 
     except vmodl.MethodFault as e:
-        print "Caught vmodl fault : " + e.msg
+        print("Caught vmodl fault : ") + e.msg
         return -1
     except Exception as e:
-        print "Caught exception : " + str(e)
+        print("Caught exception : ") + str(e)
         return -1
 
     return 0
