@@ -120,12 +120,23 @@ def host_cpu_usage(host_moref, warning, critical):
 
     :param host_moref: Managed Object Reference for the ESXi Host
     """
-    host_total_cpu = host_moref.summary.hardware.cpuMhz * host_moref.summary.hardware.numCpuCores
     host_cpu = host_moref.summary.quickStats.overallCpuUsage
-
+    host_total_cpu = host_moref.summary.hardware.cpuMhz * host_moref.summary.hardware.numCpuCores
     final_output = (host_cpu / host_total_cpu) * 100
     print_output_float(final_output, 'CPU Usage', warning, critical, '%')
 
+
+def host_mem_usage(host_moref, warning, critical):
+    """
+    Obtains the current Memory usage of the Host
+
+    :param host_moref: Managed Object Reference for the ESXi Host
+    """
+
+    host_memory = host_moref.summary.quickStats.overallMemoryUsage
+    host_total_memory = host_moref.summary.hardware.memorySize / 1024 /1024
+    final_output = (host_memory / host_total_memory) * 100
+    print_output_float(final_output, 'Memory Usage', warning, critical, '%')
 
 
 def cl_status(cl_moref):
@@ -538,6 +549,8 @@ def main():
                         host_core(host_moref)
                     elif args.counter == 'cpu.usage':
                         host_cpu_usage(host_moref, warning, critical)
+                    elif args.counter == 'mem.usage':
+                        host_mem_usage(host_moref, warning, critical)
                     else:
                         print('ERROR: No supported counter found')
                         exit(STATE_UNKNOWN)
