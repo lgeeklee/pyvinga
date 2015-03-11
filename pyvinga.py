@@ -366,19 +366,19 @@ def print_output_float(finalOutput, statName, warnValue, critValue, suffix, extr
     :param extraOutput: Any additional output that is displayed after the core performance information
     """
     if finalOutput >= critValue:
-        print("{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}").format(state_tuple[STATE_CRITICAL], statName,
+        print("{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}".format(state_tuple[STATE_CRITICAL], statName,
                                                                               finalOutput, suffix, extraOutput,
-                                                                              warnValue, critValue, min_value, max_value)
+                                                                              warnValue, critValue, min_value, max_value))
         exit(STATE_CRITICAL)
     elif finalOutput >= warnValue:
-        print("{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}").format(state_tuple[STATE_WARNING], statName,
+        print("{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6}".format(state_tuple[STATE_WARNING], statName,
                                                                               finalOutput, suffix, extraOutput,
-                                                                              warnValue, critValue, min_value, max_value)
+                                                                              warnValue, critValue, min_value, max_value))
         exit(STATE_WARNING)
     else:
-        print("{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6};{7};{8}").format(state_tuple[STATE_OK], statName,
+        print("{0} - {1} is {2:.1f}{3} {4} | '{1}'={2:.1f}{3};{5};{6};{7};{8}".format(state_tuple[STATE_OK], statName,
                                                                               finalOutput, suffix, extraOutput,
-                                                                              warnValue, critValue, min_value, max_value)
+                                                                              warnValue, critValue, min_value, max_value))
         exit(STATE_OK)
 
 
@@ -395,16 +395,16 @@ def print_output_string(finalOutput, statName, warnValue, critValue, unkValue, e
     :param extraOutput: Any additional output that is displayed after the core performance information
     """
     if finalOutput == critValue:
-        print("{} - {} is {} {}").format(state_tuple[STATE_CRITICAL], statName, finalOutput, extraOutput)
+        print("{} - {} is {} {}".format(state_tuple[STATE_CRITICAL], statName, finalOutput, extraOutput))
         exit(STATE_CRITICAL)
     elif finalOutput == warnValue:
-        print("{} - {} is {} {}").format(state_tuple[STATE_WARNING], statName, finalOutput, extraOutput)
+        print("{} - {} is {} {}".format(state_tuple[STATE_WARNING], statName, finalOutput, extraOutput))
         exit(STATE_WARNING)
     elif finalOutput == unkValue:
-        print("{} - {} is {} {}").format(state_tuple[STATE_UNKNOWN], statName, finalOutput, extraOutput)
+        print("{} - {} is {} {}".format(state_tuple[STATE_UNKNOWN], statName, finalOutput, extraOutput))
         exit(STATE_WARNING)
     else:
-        print("{} - {} is {} {}").format(state_tuple[STATE_OK], statName, finalOutput, extraOutput)
+        print("{} - {} is {} {}".format(state_tuple[STATE_OK], statName, finalOutput, extraOutput))
         exit(STATE_OK)
 
 
@@ -570,10 +570,10 @@ def main():
             print('ERROR: No supported Entity type provided')
 
     except vmodl.MethodFault as e:
-        print("Caught vmodl fault : ") + e.msg
+        print("Caught vmodl fault : " + e.msg)
         return -1
     except Exception as e:
-        print("Caught exception : ") + str(e)
+        print("Caught exception : " + str(e))
         return -1
 
     return 0
