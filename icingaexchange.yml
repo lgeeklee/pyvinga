@@ -16,7 +16,7 @@ releases:
         url: "file:///pyvinga.py"
         description: "Monitor vSphere"
         checksum: 053edd4ed9d183674cfc8b2b50d43e73
-      -
+
         name: examples.txt
         url: "file://examples.txt"
         description: "Examples of pyvinga.py at the command line"
