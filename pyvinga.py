@@ -92,9 +92,9 @@ def vm_core(vm_moref):
         vm_memory = str(vmconfig.memorySizeMB / 1024) + ' GB'
     else:
         vm_memory = str(vmconfig.memorySizeMB) + ' MB'
-    print("{}, {}, {} vCPU(s), {} Memory").format(vmconfig.annotation,
+    print("{}, {}, {} vCPU(s), {} Memory".format(vmconfig.annotation,
                                                         vmconfig.guestFullName, vm_moref.summary.config.numCpu,
-                                                        (vm_memory))
+                                                        (vm_memory)))
     exit(STATE_OK)
 
 
@@ -105,12 +105,12 @@ def host_core(host_moref):
     :param host_moref: Managed Object Reference for the ESXi Host
     """
     hosthardware = host_moref.summary.hardware
-    print("{}, {} x {} CPU(s) ({} Cores, {} Logical), {:.0f} GB Memory").format(hosthardware.model,
+    print("{}, {} x {} CPU(s) ({} Cores, {} Logical), {:.0f} GB Memory".format(hosthardware.model,
                                                                                hosthardware.numCpuPkgs,
                                                                                hosthardware.cpuModel,
                                                                                hosthardware.numCpuCores,
                                                                                hosthardware.numCpuThreads,
-                                                                               (hosthardware.memorySize / 1024 / 1024 / 1024))
+                                                                               (hosthardware.memorySize / 1024 / 1024 / 1024)))
     exit(STATE_OK)
 
 
