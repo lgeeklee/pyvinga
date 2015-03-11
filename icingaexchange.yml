@@ -11,11 +11,13 @@ releases:
     name: 1.5
     description: "1.5 Release: Add Host CPU and Memory checks"
     files:
-      - name: pyvinga.py
+      -
+        name: pyvinga.py
         url: "file:///pyvinga.py"
         description: "Monitor vSphere"
         checksum: 053edd4ed9d183674cfc8b2b50d43e73
-      - name: examples.txt
+      -
+        name: examples.txt
         url: "file://examples.txt"
         description: "Examples of pyvinga.py at the command line"
         checksum: 8e225bdf3d8937412abcd311317ad7c7
