@@ -1,0 +1,45 @@
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n host -e vmesxi01.lab.local -r cpu.usage -w 5 -c 10
+OK - CPU Usage is 2.1%  | 'CPU Usage'=2.1%;5.0;10.0;0;100
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n host -e vmesxi01.lab.local -r mem.usage -w 5 -c 10
+CRITICAL - Memory Usage is 58.3%  | 'Memory Usage'=58.3%;5.0;10.0
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n host -e vmesxi01.lab.local -r core
+VMware Virtual Platform, 2 x Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz CPU(s) (2 Cores, 2 Logical), 4 GB Memory
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n vm -e VMTEST01 -r core
+Test Virtual Machine, Microsoft Windows Server 2008 R2 (64-bit), 1 vCPU(s), 1.0 GB Memory
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n vm -e VMTEST01 -r cpu.usage -w 5 -c 10
+OK - CPU Usage is 1.1%  | 'CPU Usage'=1.1%;5.0;10.0;0;100
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n vm -e VMTEST01 -r cpu.ready -w 5 -c 10
+OK - CPU Ready is 0.1%  | 'CPU Ready'=0.1%;5.0;10.0;0;100
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n vm -e VMTEST01 -r mem.active -w 80 -c 90
+OK - Memory Active is 81.9MB  | 'Memory Active'=81.9MB;819.2;921.6;0;1024
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n vm -e VMTEST01 -r mem.balloon -w 40 -c 60
+OK - Memory Balloon is 0.0MB  | 'Memory Balloon'=0.0MB;409.6;614.4;0;1024
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n vm -e VMTEST01 -r mem.shared -w 40 -c 60
+OK - Memory Shared is 3.8MB  | 'Memory Shared'=3.8MB;409.6;614.4;0;1024
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n vm -e VMTEST01 -r datastore.io -w 50 -c 100
+OK - Datastore IOPS is 0.0IOPS  | 'Datastore IOPS'=0.0IOPS;50.0;100.0;0;5000
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n vm -e VMTEST01 -r datastore.latency -w 10 -c 20
+OK - Datastore Latency is 0.0ms  | 'Datastore Latency'=0.0ms;10.0;20.0;0;100
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n vm -e VMTEST01 -r network.usage -w 1 -c 5
+OK - Network Usage is 0.0Mbps  | 'Network Usage'=0.0Mbps;1.0;5.0;0;1000
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n datastore -e OF-iSCSI1 -r status
+OK - Datastore Status is green (Type: VMFS)
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n datastore -e OF-iSCSI1 -r space -w 80 -c 90
+OK - Datastore Used Space is 46.5% (Used 33.9 GB of 73.0 GB) | 'Datastore Used Space'=46.5%;80.0;90.0;0;100
+
+++ /opt/pyvinga/pyvinga.py -s vcenterhostname -u svc-pyvinga -p xyz123 -n cluster -e HLCLUSTER -r status
+WARNING - Cluster Status is yellow
+
