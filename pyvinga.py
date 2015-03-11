@@ -122,8 +122,8 @@ def host_cpu_usage(host_moref, warning, critical):
     host_total_cpu = host_moref.summary.hardware.cpuMhz * host_moref.summary.hardware.numCpuCores
     host_cpu = host_moref.summary.quickStats.overallCpuUsage
 
-    final_output = (host_cpu /host_total_cpu) * 100
-
+    final_output = (host_cpu / host_total_cpu) * 100
+    print final_output
     print_output_float(final_output, 'CPU Usage', warning, critical, '%')
 
 
