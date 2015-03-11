@@ -113,7 +113,7 @@ def host_core(host_moref):
     exit(STATE_OK)
 
 
-def host_cpu(host_moref, warning, critical):
+def host_cpu_usage(host_moref, warning, critical):
     """
     Obtains the current CPU usage of the Host
 
@@ -536,8 +536,8 @@ def main():
                     host_moref = host['moref']
                     if args.counter == 'core':
                         host_core(host_moref)
-                    elif args.counter == 'host.cpu':
-                        host_cpu(host_moref)
+                    elif args.counter == 'cpu.usage':
+                        host_cpu_usage(host_moref, warning, critical)
                     else:
                         print 'ERROR: No supported counter found'
                         exit(STATE_UNKNOWN)
