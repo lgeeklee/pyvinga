@@ -10,8 +10,8 @@ Additional information can be found at http://www.geeklee.co.uk/monitor-vsphere-
 
 <img src="http://geeklee.co.uk/github/pyvinga-demo1.png" alt="Example output">
 
-<img src="http://geeklee.co.uk/github/pyvinga-demo2.png" alt="Example output">
+<img src="http://geeklee.co.uk/github/pyvinga-demo2.png" alt="Example output" width="900">
 
-<img src="http://geeklee.co.uk/github/pyvinga-demo3.png" alt="Example output">
+<img src="http://geeklee.co.uk/github/pyvinga-demo3.png" alt="Example output" width="900">
 
-<img src="http://geeklee.co.uk/github/pyvinga-demo4.png" alt="Example output" width="600">
+<img src="http://geeklee.co.uk/github/pyvinga-demo4.png" alt="Example output" width="900">
