@@ -9,9 +9,9 @@ Please see the GitHub site Wiki for further details on features, examples and se
 Additional information can be found at http://www.geeklee.co.uk/monitor-vsphere-with-python-and-icinga/
 
 <img src="http://geeklee.co.uk/github/pyvinga-demo1.png" alt="Example output">
-</br>
+
 <img src="http://geeklee.co.uk/github/pyvinga-demo2.png" alt="Example output">
-</br>
+
 <img src="http://geeklee.co.uk/github/pyvinga-demo3.png" alt="Example output">
-</br>
-<img src="http://geeklee.co.uk/github/pyvinga-demo4.png" alt="Example output">
+
+<img src="http://geeklee.co.uk/github/pyvinga-demo4.png" alt="Example output" width="600">
