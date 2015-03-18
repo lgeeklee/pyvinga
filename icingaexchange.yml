@@ -8,8 +8,8 @@ type: Plugin
 license: mit
 releases:
   -
-    name: 1.5
-    description: "1.5 Release: Add Host CPU and Memory checks"
+    name: 1.6
+    description: "1.6 Release: Added ESXi version to host CORE output"
     files:
       -
         name: pyvinga.py
