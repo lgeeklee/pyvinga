@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-
 """
 Python program that will query requested counters in vCenter and return
-status information for Icinga
+status information for Nagios/Icinga
 """
 
 from __future__ import print_function
@@ -11,7 +10,8 @@ from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vmodl, vim
 from datetime import timedelta, datetime
 from os import path
-
+from ssl import SSLError
+import ssl
 import argparse
 import atexit
 import getpass
@@ -32,6 +32,7 @@ def GetArgs():
     """
     parser = argparse.ArgumentParser(description='Process args for retrieving all the Virtual Machines')
     parser.add_argument('-s', '--host', required=True, action='store', help='Remote host to connect to')
+    parser.add_argument('-i', '--insecure', action='store_true', default=False, help='Disables SSL verification')
     parser.add_argument('-o', '--port', type=int, default=443, action='store', help='Port to connect on')
     parser.add_argument('-u', '--user', required=True, action='store', help='User name to use when connecting to host')
     parser.add_argument('-p', '--password', required=False, action='store',
@@ -39,8 +40,10 @@ def GetArgs():
     parser.add_argument('-n', '--type', required=True, action='store', help='values should be vm,host or datastore')
     parser.add_argument('-e', '--entity', required=True, action='store', help='One or more entities to report on')
     parser.add_argument('-r', '--counter', required=True, action='store', help='Performance Counter Name')
-    parser.add_argument('-w', '--warning', required=False, action='store', help='Warning level for the counter')
-    parser.add_argument('-c', '--critical', required=False, action='store', help='Critical level for the counter')
+    parser.add_argument('-w', '--warning', required=False, action='store', default=80,
+                        help='Warning level for the counter (default: 80)')
+    parser.add_argument('-c', '--critical', required=False, action='store', default=90,
+                        help='Critical level for the counter (default: 90)')
     args = parser.parse_args()
     return args
 
@@ -428,8 +431,10 @@ def create_perf_dictionary(content):
     """
     if content.about.name == 'VMware vCenter Server':
         perf_dict = write_perf_dictionary(content, '/tmp/vcenter_perfdic.txt')
+        # perf_dict = write_perf_dictionary(content, 'c:\\temp\\vcenter_perfdic.txt')
     elif content.about.name == 'VMware ESXi':
         perf_dict = write_perf_dictionary(content, '/tmp/host_perfdic.txt')
+        # perf_dict = write_perf_dictionary(content, 'c:\\temp\\host_perfdic.txt')
     return perf_dict
 
 
@@ -465,6 +470,10 @@ def write_perf_dictionary(content, file_perf_dic):
 def main():
     args = GetArgs()
     try:
+        # disable SSL verification if requested
+        context = None
+        if args.insecure:
+            context = ssl._create_unverified_context()
         entity = args.entity
         if args.counter != 'core' and args.counter != 'status':
             warning = float(args.warning)
@@ -478,14 +487,19 @@ def main():
         # Set stderr to log /dev/null instead of the screen to prevent warnings contaminating output
         # NOTE: This is only in place until a more suitable method to deal with the latest certificate warnings
         f = open('/dev/null', "w")
+        # f = open('c:\\temp\\dummy', "w")
         original_stderr = sys.stderr
         sys.stderr = f
         try:
             si = SmartConnect(host=args.host,
                               user=args.user,
                               pwd=password,
-                              port=int(args.port))
-        except IOError as e:
+                              port=int(args.port),
+                              sslContext=context)
+        except SSLError as e:
+            print('Could not verify SSL certificate, use -i / --insecure to skip checking')
+            return -1
+        except IOError:
             pass
         finally:
             sys.stderr = original_stderr
