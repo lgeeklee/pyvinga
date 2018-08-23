@@ -40,8 +40,10 @@ def GetArgs():
     parser.add_argument('-n', '--type', required=True, action='store', help='values should be vm,host or datastore')
     parser.add_argument('-e', '--entity', required=True, action='store', help='One or more entities to report on')
     parser.add_argument('-r', '--counter', required=True, action='store', help='Performance Counter Name')
-    parser.add_argument('-w', '--warning', required=False, action='store', help='Warning level for the counter')
-    parser.add_argument('-c', '--critical', required=False, action='store', help='Critical level for the counter')
+    parser.add_argument('-w', '--warning', required=False, action='store', default=80,
+                        help='Warning level for the counter (default: 80)')
+    parser.add_argument('-c', '--critical', required=False, action='store', default=90,
+                        help='Critical level for the counter (default: 90)')
     args = parser.parse_args()
     return args
 
